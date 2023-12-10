@@ -2,6 +2,8 @@ import { DATA_BASE_URL } from "@/constants.js";
 import { defineStore } from "pinia";
 import { getDateRanges, checkDateOverlap } from "@/utils.js";
 
+let timeout_fakeLoading;
+
 export const useEventsStore = defineStore("events", {
 	state: () => ({
 		items: [],
@@ -79,6 +81,13 @@ export const useEventsStore = defineStore("events", {
 				this.fetchEventsStatus = "error";
 				throw error; // re-throw the error for caller to handle
 			}
+		},
+		triggerFakeLoading() {
+			clearTimeout(timeout_fakeLoading);
+			this.fetchEventsStatus = "fetching";
+			timeout_fakeLoading = setTimeout(() => {
+				this.fetchEventsStatus = "success";
+			}, 400);
 		},
 	},
 });

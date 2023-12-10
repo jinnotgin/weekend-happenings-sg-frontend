@@ -1,6 +1,7 @@
 <script setup>
 import { ref } from "vue";
 import { RouterLink, RouterView, useRoute } from "vue-router";
+import { useEventsStore } from "@/stores/events.js";
 import DropdownSelector from "@/components/DropdownSelector.vue";
 
 const route = useRoute();
@@ -8,6 +9,7 @@ function isCurrentRoute(path) {
 	return route.path === path;
 }
 
+const events = useEventsStore();
 const timeRangeOptions = {
 	thisWeek: "this week",
 	thisWeekend: "this weekend",
@@ -18,6 +20,7 @@ const timeRangeOptions = {
 };
 const activeTimeRange = ref("thisWeekend");
 function handleTimeRangeChange(newValue) {
+	events.triggerFakeLoading();
 	activeTimeRange.value = newValue;
 }
 </script>
