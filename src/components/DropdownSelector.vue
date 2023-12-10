@@ -37,7 +37,7 @@ onUnmounted(() => {
 </script>
 
 <template>
-	<div class="relative" ref="dropdownRef">
+	<div class="relative w-fit z-20" ref="dropdownRef">
 		<button @click="toggleDropdown" class="flex items-center">
 			{{
 				props.selectedValue ? props.options[props.selectedValue] : "Dropdown"
@@ -47,7 +47,7 @@ onUnmounted(() => {
 		</button>
 		<div
 			v-if="isDropdownOpen"
-			class="absolute z-10 mt-2 bg-white border rounded shadow w-max"
+			class="absolute mt-2 bg-white border rounded shadow w-max"
 		>
 			<a
 				v-for="(display, name) in props.options"

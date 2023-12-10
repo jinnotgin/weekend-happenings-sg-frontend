@@ -7,7 +7,7 @@ export const useEventsStore = defineStore("events", {
 		items: [],
 		sources: [],
 		generationTime: null,
-		/** @type {'idle' | 'loading' | 'success', 'error'} */
+		/** @type {'idle' | 'fetching' | 'success', 'error'} */
 		fetchEventsStatus: "idle",
 		/** @type {string || null} */
 		lastFetchEventsTime: null,
@@ -23,11 +23,16 @@ export const useEventsStore = defineStore("events", {
 				);
 			};
 		},
+		getSourcesData: (state) => {
+			return (sourcesIndex) => {
+				return sourcesIndex.map((index) => state.sources[index]);
+			};
+		},
 	},
 	actions: {
 		async fetchEvents() {
 			try {
-				this.fetchEventsStatus = "loading";
+				this.fetchEventsStatus = "fetching";
 				const DATA_URL = `${DATA_BASE_URL}/latest`;
 
 				// get events
