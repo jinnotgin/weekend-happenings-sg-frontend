@@ -58,7 +58,7 @@ function handleTimeRangeChange(newValue) {
 			class="text-xl sm:text-2xl mt-4 flex flex-wrap"
 			v-show="isCurrentRoute('/')"
 		>
-			<span class="mr-2">Explore what's happening 🍔🛍️🌳,</span>
+			<span class="mr-2">Explore what's happening</span>
 			<DropdownSelector
 				class="text-xl sm:text-2xl mr-1 border-b-2 border-orange-700 transition hover:scale-105 hover:bg-red-100"
 				:options="timeRangeOptions"
