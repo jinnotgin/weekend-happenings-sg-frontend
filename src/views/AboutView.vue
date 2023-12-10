@@ -8,7 +8,7 @@
 			<quote class="ml-5 italic">"There's nothing much to do here."</quote>
 			<p>or,</p>
 			<quote class="ml-5 italic"
-				>"I never know where to go in our little red dot."</quote
+				>"I never know where to go in this little red dot."</quote
 			>
 			<p>
 				And I get it. Trying to find exciting activities or events can often

@@ -30,9 +30,11 @@ function handleTimeRangeChange(newValue) {
 		class="font-serif pt-10 px-5 max-w-2xl md:max-w-3xl lg:max-w-4xl xl:max-w-5xl 2xl:max-w-6xl mx-auto"
 	>
 		<div class="flex justify-between">
-			<h1 class="text-4xl sm:text-5xl font-semibold text-orange-700">
-				Now in <span class="hidden sm:inline">Singapore</span> 🇸🇬
-			</h1>
+			<RouterLink to="/">
+				<h1 class="text-4xl sm:text-5xl font-semibold text-orange-700">
+					Now in <span class="hidden sm:inline">Singapore</span> 🇸🇬
+				</h1>
+			</RouterLink>
 
 			<nav>
 				<RouterLink to="/" v-show="!isCurrentRoute('/')"
@@ -67,7 +69,7 @@ function handleTimeRangeChange(newValue) {
 	</header>
 
 	<RouterView
-		class="font-serif pt-4 sm:pt-12"
+		class="font-serif pt-4 sm:pt-8"
 		:activeTimeRange="activeTimeRange"
 	/>
 	<footer
