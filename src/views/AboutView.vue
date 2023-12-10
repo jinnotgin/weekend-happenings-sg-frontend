@@ -17,9 +17,7 @@
 			<p>
 				It's not just about the rarity of finding something unique; it's the
 				tiresome process of sifting through countless websites, googling
-				endlessly, and jumping from one platform to another. This often leaves
-				you feeling more overwhelmed than excited, turning what should be a fun
-				exploration into a tedious chore.
+				endlessly, and jumping from one platform to another.
 			</p>
 			<p>
 				That's exactly why "Now In Singapore" was created - its a one-stop,
