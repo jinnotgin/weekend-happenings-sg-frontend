@@ -44,7 +44,7 @@ events.fetchEvents();
 				<li
 					v-for="(event, index) in events.getItemsInDateRange(activeTimeRange)"
 					:key="index"
-					class="transition-all ease-in-out hover:bg-red-100 sm:hover:-translate-y-1 sm:hover:scale-105"
+					class="transition-all ease-in-out sm:hover:bg-red-100 sm:hover:-translate-y-1 sm:hover:scale-105"
 				>
 					<div
 						class="max-w-2xl md:max-w-3xl lg:max-w-4xl xl:max-w-5xl 2xl:max-w-6xl mx-auto px-5 py-4 sm:py-10 flex flex-col-reverse sm:flex-row gap-4 sm:gap-10 xl:gap-20"
