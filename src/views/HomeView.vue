@@ -152,7 +152,7 @@ events.fetchEvents();
 			</li>
 		</ul>
 		<p class="text-center italic py-6">
-			Events were sourced on
+			Events sourced on
 			{{ new Date(events.generationTime).toLocaleString() }}.
 		</p>
 	</main>
