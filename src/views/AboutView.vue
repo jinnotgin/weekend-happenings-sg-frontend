@@ -4,7 +4,7 @@
 	>
 		<article class="flex flex-col gap-4 max-w-2xl text-lg">
 			<h1 class="text-2xl font-bold">Why "Now In Singapore"?</h1>
-			<p>As a Singaporean, I've often heard friends lament that,</p>
+			<p>As a Singaporean, I've often hear friends lament that,</p>
 			<quote class="ml-5 italic">"There's nothing much to do here."</quote>
 			<p>or,</p>
 			<quote class="ml-5 italic"
@@ -78,8 +78,7 @@
 					class="underline text-orange-700"
 					target="_blank"
 					>personal portfolio</a
-				>
-				.
+				>.
 			</p>
 		</article>
 	</div>
