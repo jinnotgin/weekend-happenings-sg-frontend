@@ -1,6 +1,10 @@
 import { DATA_BASE_URL } from "@/constants.js";
 import { defineStore } from "pinia";
-import { getDateRanges, checkDateOverlap } from "@/utils.js";
+import {
+	getDateRanges,
+	checkDateOverlap,
+	getCheckpointTimestamp,
+} from "@/utils.js";
 
 let timeout_fakeLoading;
 
@@ -37,8 +41,11 @@ export const useEventsStore = defineStore("events", {
 				this.fetchEventsStatus = "fetching";
 				const DATA_URL = `${DATA_BASE_URL}/latest`;
 
+				// set checkpoint timestamp (the data is refreshed at certain timings)
+				const timestamp = getCheckpointTimestamp();
+
 				// get events
-				const eventsUrl = `${DATA_URL}/events.json`;
+				const eventsUrl = `${DATA_URL}/events.json?${timestamp}`;
 				const eventsResponse = await fetch(eventsUrl);
 				if (!eventsResponse.ok) {
 					throw new Error(`HTTP error! Status: ${eventsResponse.status}`);
@@ -53,7 +60,7 @@ export const useEventsStore = defineStore("events", {
 				});
 
 				// get sources
-				const sourcesUrl = `${DATA_URL}/sources.json`;
+				const sourcesUrl = `${DATA_URL}/sources.json?${timestamp}`;
 				const sourcesResponse = await fetch(sourcesUrl);
 				if (!sourcesResponse.ok) {
 					throw new Error(`HTTP error! Status: ${sourcesResponse.status}`);
@@ -62,7 +69,7 @@ export const useEventsStore = defineStore("events", {
 				this.sources = sourcesData;
 
 				// get generationTime
-				const generationTimeUrl = `${DATA_URL}/generationTime.json`;
+				const generationTimeUrl = `${DATA_URL}/generationTime.json?${timestamp}`;
 				const generationTimeResponse = await fetch(generationTimeUrl);
 				if (!generationTimeResponse.ok) {
 					throw new Error(

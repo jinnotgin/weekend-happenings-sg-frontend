@@ -103,3 +103,28 @@ export function checkDateOverlap(withinRange, findRange) {
 	// No overlap if the end of one range is before the start of the other, or vice versa
 	return !(withinEnd < findStart || withinStart > findEnd);
 }
+
+export function getCheckpointTimestamp() {
+	const SGT_OFFSET = 8; // Singapore is GMT+8
+
+	// convert to SGT and adjust to last Tuesday or Thursday
+	let now = new Date();
+	let dayOfWeek = now.getUTCDay();
+	let hour = now.getUTCHours() + SGT_OFFSET; // Get hour in SGT
+
+	let daysToAdjust;
+	if (dayOfWeek > 2 || (dayOfWeek === 2 && hour >= 3)) {
+		// After Tuesday 3 AM SGT
+		daysToAdjust = dayOfWeek - 2;
+	} else if (dayOfWeek < 2 || (dayOfWeek === 2 && hour < 3)) {
+		// Before Tuesday 3 AM SGT
+		daysToAdjust = 7 - (2 - dayOfWeek);
+	}
+
+	let lastDay = new Date(now);
+	lastDay.setUTCDate(now.getUTCDate() - daysToAdjust);
+	lastDay.setUTCHours(3 - SGT_OFFSET, 0, 0, 0); // Set to 3 AM SGT
+
+	let timestamp = lastDay.getTime(); // Return Unix timestamp
+	return `${timestamp}`;
+}
