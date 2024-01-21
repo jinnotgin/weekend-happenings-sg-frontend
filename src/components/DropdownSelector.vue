@@ -21,23 +21,27 @@ const selectOption = (value) => {
 	toggleDropdown();
 };
 
-const handleClickOutside = (event) => {
-	if (dropdownRef.value && !dropdownRef.value.contains(event.target)) {
-		isDropdownOpen.value = false;
-	}
-};
+// const handleClickOutside = (event) => {
+// 	if (dropdownRef.value && !dropdownRef.value.contains(event.target)) {
+// 		isDropdownOpen.value = false;
+// 	}
+// };
 
-onMounted(() => {
-	document.addEventListener("click", handleClickOutside);
-});
+// onMounted(() => {
+// 	document.addEventListener("click", handleClickOutside);
+// });
 
-onUnmounted(() => {
-	document.removeEventListener("click", handleClickOutside);
-});
+// onUnmounted(() => {
+// 	document.removeEventListener("click", handleClickOutside);
+// });
 </script>
 
 <template>
-	<VMenu class="relative w-fit h-full z-20" ref="dropdownRef">
+	<VDropdown
+		class="relative w-fit h-full z-20"
+		ref="dropdownRef"
+		:popperHideTriggers="(triggers) => [...triggers, 'click']"
+	>
 		<button @click="toggleDropdown" class="flex items-center">
 			<span class="max-w-[200px] sm:max-w-fit truncate">
 				{{
@@ -69,5 +73,5 @@ onUnmounted(() => {
 				{{ Array.isArray(props.options) ? value : props.options[index] }}
 			</a>
 		</template>
-	</VMenu>
+	</VDropdown>
 </template>
