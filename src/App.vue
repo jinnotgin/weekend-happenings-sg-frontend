@@ -82,7 +82,7 @@ function handleTimeRangeChange(newValue) {
 				class="underline text-orange-700"
 				target="_blank"
 				>Jin</a
-			>, © 2023</span
+			>, © 2023 - 2024</span
 		>
 		<VMenu placement="top">
 			<a href="mailto:nowinsg@jinn.me" class="underline">Submit your event</a>
