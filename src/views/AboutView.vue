@@ -28,7 +28,7 @@
 					target="_blank"
 					class="underline"
 					>GPT-4, a Large Language Model</a
-				>) to better compile and summarise information automatically across
+				>) to better compile, summarise and categorise information across
 				different websites - so that you don't have to.
 			</p>
 			<hr class="h-px bg-gray-300 border-0 my-4" />
