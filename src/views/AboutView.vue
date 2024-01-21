@@ -18,7 +18,7 @@
 			<p>
 				"Now In Singapore" will routinely scour the internet to compile a
 				comprehensive list of events happening all over Singapore. From festive
-				celeabrations to special events, it's all curated and updated for you,
+				celebrations to special events, it's all curated and updated for you,
 				significantly reducing the hassle when finding the perfect outing.
 			</p>
 			<p>
