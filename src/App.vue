@@ -64,7 +64,7 @@ function handleCategoryChange(newValue) {
 		</div>
 
 		<h3
-			class="text-xl sm:text-2xl mt-4 flex flex-wrap items-center gap-x-3 gap-y-2"
+			class="text-xl sm:text-2xl mt-4 flex flex-wrap items-center gap-x-2 gap-y-2"
 			v-show="isCurrentRoute('/')"
 		>
 			<span>Explore</span>
