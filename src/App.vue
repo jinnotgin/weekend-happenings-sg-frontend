@@ -1,5 +1,5 @@
 <script setup>
-import { ref } from "vue";
+import { ref, computed } from "vue";
 import { RouterLink, RouterView, useRoute } from "vue-router";
 import { useEventsStore } from "@/stores/events.js";
 import DropdownSelector from "@/components/DropdownSelector.vue";
@@ -22,6 +22,15 @@ const activeTimeRange = ref("thisWeekend");
 function handleTimeRangeChange(newValue) {
 	events.triggerFakeLoading();
 	activeTimeRange.value = newValue;
+}
+
+const categoryOptions = computed(() => {
+	return ["all", ...events.categories];
+});
+const activeCategory = ref("all");
+function handleCategoryChange(newValue) {
+	events.triggerFakeLoading();
+	activeCategory.value = newValue;
 }
 </script>
 
@@ -55,12 +64,19 @@ function handleTimeRangeChange(newValue) {
 		</div>
 
 		<h3
-			class="text-xl sm:text-2xl mt-4 flex flex-wrap"
+			class="text-xl sm:text-2xl mt-4 flex flex-wrap items-center gap-x-3 gap-y-2"
 			v-show="isCurrentRoute('/')"
 		>
-			<span class="mr-2">Explore what's happening</span>
+			<span>Explore</span>
 			<DropdownSelector
-				class="text-xl sm:text-2xl mr-1 border-b-2 border-orange-700 transition hover:scale-105 hover:bg-red-100"
+				class="text-xl sm:text-2xl border-b-2 border-orange-700 transition hover:scale-105 hover:bg-red-100"
+				:options="categoryOptions"
+				:selectedValue="activeCategory"
+				@update:selectedValue="handleCategoryChange"
+			/>
+			<span>events happening</span>
+			<DropdownSelector
+				class="text-xl sm:text-2xl border-b-2 border-orange-700 transition hover:scale-105 hover:bg-red-100"
 				:options="timeRangeOptions"
 				:selectedValue="activeTimeRange"
 				@update:selectedValue="handleTimeRangeChange"
@@ -71,6 +87,7 @@ function handleTimeRangeChange(newValue) {
 	<RouterView
 		class="font-serif pt-4 sm:pt-8"
 		:activeTimeRange="activeTimeRange"
+		:activeCategory="activeCategory"
 	/>
 	<footer
 		class="font-serif pt-10 pb-14 px-5 max-w-2xl md:max-w-3xl lg:max-w-4xl xl:max-w-5xl 2xl:max-w-6xl mx-auto flex justify-between"

@@ -3,8 +3,8 @@ import { ref, defineProps, defineEmits, onMounted, onUnmounted } from "vue";
 import VueFeather from "vue-feather";
 
 const props = defineProps({
-	options: Object, // Object of options. key is name, value is display name
-	selectedValue: String, // Currently selected value
+	options: [Array, Object], // Options can be either an array or an object
+	selectedValue: [String, Number], // Selected value can be either a string or a number
 });
 
 const emits = defineEmits(["update:selectedValue"]);
@@ -37,28 +37,37 @@ onUnmounted(() => {
 </script>
 
 <template>
-	<div class="relative w-fit z-20" ref="dropdownRef">
+	<VMenu class="relative w-fit h-full z-20" ref="dropdownRef">
 		<button @click="toggleDropdown" class="flex items-center">
-			{{
-				props.selectedValue ? props.options[props.selectedValue] : "Dropdown"
-			}}
-
+			<span class="max-w-[200px] sm:max-w-fit truncate">
+				{{
+					Array.isArray(props.options)
+						? props.selectedValue
+						: props.selectedValue // not array, is object. now check if truthy
+						? props.options[props.selectedValue]
+						: "Dropdown"
+				}}</span
+			>
 			<vue-feather type="chevron-down" size="32" class="icon w-6 h-6 ml-2" />
 		</button>
-		<div
-			v-if="isDropdownOpen"
-			class="absolute mt-2 bg-white border rounded shadow w-max"
-		>
+
+		<template #popper>
 			<a
-				v-for="(display, name) in props.options"
-				:key="name"
+				v-for="(value, index) in props.options"
+				:key="index"
 				href="#"
 				class="block px-4 py-2 hover:bg-gray-100"
-				:class="{ 'font-bold': props.selectedValue === name }"
-				@click.prevent="selectOption(name)"
+				:class="{
+					'font-bold':
+						props.selectedValue ===
+						(Array.isArray(props.options) ? value : index),
+				}"
+				@click.prevent="
+					selectOption(Array.isArray(props.options) ? value : index)
+				"
 			>
-				{{ display }}
+				{{ Array.isArray(props.options) ? value : props.options[index] }}
 			</a>
-		</div>
-	</div>
+		</template>
+	</VMenu>
 </template>

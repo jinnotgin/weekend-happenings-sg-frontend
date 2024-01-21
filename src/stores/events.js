@@ -11,6 +11,7 @@ let timeout_fakeLoading;
 export const useEventsStore = defineStore("events", {
 	state: () => ({
 		items: [],
+		categories: [],
 		sources: [],
 		generationTime: null,
 		/** @type {'idle' | 'fetching' | 'success', 'error'} */
@@ -19,14 +20,17 @@ export const useEventsStore = defineStore("events", {
 		lastFetchEventsTime: null,
 	}),
 	getters: {
-		getItemsInDateRange: (state) => {
-			return (dateRangeKey) => {
+		getItemsInDateRangeAndCategory: (state) => {
+			return (dateRangeKey, categoryKey) => {
 				const dateRanges = getDateRanges();
 				const targetDateRange = dateRanges[dateRangeKey];
 
-				return state.items.filter(({ daterange }) =>
-					checkDateOverlap(daterange, targetDateRange)
-				);
+				return state.items.filter(({ daterange, category }) => {
+					const HAS_DATE_OVERLAP = checkDateOverlap(daterange, targetDateRange);
+					const WITHIN_CATEGORY =
+						categoryKey === "all" || category.includes(categoryKey);
+					return HAS_DATE_OVERLAP && WITHIN_CATEGORY;
+				});
 			};
 		},
 		getSourcesData: (state) => {
@@ -52,12 +56,18 @@ export const useEventsStore = defineStore("events", {
 				}
 				const eventsData = await eventsResponse.json();
 
+				const allCategories = new Set();
 				this.items = eventsData.map((item) => {
+					for (let categoryName of item.category) {
+						allCategories.add(categoryName);
+					}
+
 					item.thumbnail = item.thumbnail
 						? `${DATA_URL}/${item.thumbnail}`
 						: null;
 					return item;
 				});
+				this.categories = Array.from(allCategories);
 
 				// get sources
 				const sourcesUrl = `${DATA_URL}/sources.json?${timestamp}`;

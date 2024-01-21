@@ -1,14 +1,21 @@
 <script setup>
-import { defineProps } from "vue";
+import { defineProps, computed } from "vue";
 import { useEventsStore } from "@/stores/events.js";
 import VueFeather from "vue-feather";
 
 const events = useEventsStore();
 const props = defineProps({
 	activeTimeRange: String,
+	activeCategory: String,
 });
 
 events.fetchEvents();
+const filteredEvents = computed(() => {
+	return events.getItemsInDateRangeAndCategory(
+		props.activeTimeRange,
+		props.activeCategory
+	);
+});
 </script>
 
 <template>
@@ -30,7 +37,10 @@ events.fetchEvents();
 			</p>
 		</div>
 		<div v-show="events.fetchEventsStatus === 'success'">
-			<p class="text-center italic pb-4 sm:pb-6">
+			<p
+				class="text-center italic pb-4 sm:pb-6"
+				v-show="filteredEvents.length > 0"
+			>
 				<span class="inline sm:hidden text-sm"
 					>Events sourced using AI, may have inaccuracies.</span
 				>
@@ -39,10 +49,24 @@ events.fetchEvents();
 					inaccurate.
 				</span>
 			</p>
-			<hr class="h-px bg-gray-300 border-0" />
+			<hr
+				class="h-px bg-gray-300 border-0"
+				v-show="filteredEvents.length > 0"
+			/>
+			<div
+				v-show="filteredEvents.length === 0"
+				class="max-w-2xl md:max-w-3xl lg:max-w-4xl xl:max-w-5xl 2xl:max-w-6xl mx-auto text-center py-12"
+			>
+				<p>
+					Oh no! 😞 We couldn't find any events for this category and time
+					range.
+				</p>
+				<br />
+				<p>Try adjusting your filters for more results!</p>
+			</div>
 			<ul class="flex flex-col">
 				<li
-					v-for="(event, index) in events.getItemsInDateRange(activeTimeRange)"
+					v-for="(event, index) in filteredEvents"
 					:key="index"
 					class="transition-all ease-in-out sm:hover:bg-red-100 sm:hover:-translate-y-1 sm:hover:scale-105"
 				>
@@ -152,7 +176,7 @@ events.fetchEvents();
 					<hr class="h-px bg-gray-300 border-0" />
 				</li>
 			</ul>
-			<p class="text-center italic py-6">
+			<p class="text-center italic py-6" v-show="filteredEvents.length > 0">
 				Events sourced on
 				{{ new Date(events.generationTime).toLocaleString() }}.
 			</p>
