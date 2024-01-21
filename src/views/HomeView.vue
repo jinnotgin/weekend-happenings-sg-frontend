@@ -19,7 +19,7 @@ const filteredEvents = computed(() => {
 </script>
 
 <template>
-	<main>
+	<main class="overflow-x-hidden">
 		<div
 			class="text-center py-12"
 			v-show="events.fetchEventsStatus !== 'success'"
