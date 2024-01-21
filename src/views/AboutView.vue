@@ -27,7 +27,7 @@
 					href="https://openai.com/research/gpt-4"
 					target="_blank"
 					class="underline"
-					>GPT-4</a
+					>GPT-4, a Large Language Model</a
 				>) to better compile and summarise information automatically across
 				different websites - so that you don't have to.
 			</p>
