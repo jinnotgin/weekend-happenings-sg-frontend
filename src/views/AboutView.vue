@@ -6,34 +6,30 @@
 			<h1 class="text-2xl font-bold">Why "Now In Singapore"?</h1>
 			<p>As a Singaporean, I've often hear friends lament that,</p>
 			<quote class="ml-5 italic">"There's nothing much to do here."</quote>
-			<p>or,</p>
-			<quote class="ml-5 italic"
-				>"I never know where to go in this little red dot."</quote
-			>
 			<p>
 				And I get it. Trying to find exciting activities or events can often
-				feel like an endless, daunting task.
+				feel like a tiresome process of googling endlessly and sifting through
+				countless websites. 😢
 			</p>
 			<p>
-				It's not just about the rarity of finding something unique; it's the
-				tiresome process of sifting through countless websites, googling
-				endlessly, and jumping from one platform to another.
+				That's exactly why "Now In Singapore" was created - its a one-stop
+				starter guide to discovering the pulse of Singapore! 🌟
 			</p>
 			<p>
-				That's exactly why "Now In Singapore" was created - its a one-stop,
-				AI-driven solution to discover the pulse of our city.
+				"Now In Singapore" will routinely scour the internet to compile a
+				comprehensive list of events happening all over Singapore. From festive
+				celeabrations to special events, it's all curated and updated for you,
+				significantly reducing the hassle when finding the perfect outing.
 			</p>
 			<p>
-				Using Generative AI (like
+				It even uses Generative AI technologies 🤖 (like
 				<a
 					href="https://openai.com/research/gpt-4"
 					target="_blank"
 					class="underline"
 					>GPT-4</a
-				>), "Now In Singapore" will routinely scour the internet to compile a
-				comprehensive list of events happening all over Singapore. From festive
-				celeabrations to special events, it's all curated and updated for you,
-				significantly reducing the hassle when finding the perfect outing.
+				>) to better compile and summarise information automatically across
+				different websites - so that you don't have to.
 			</p>
 			<hr class="h-px bg-gray-300 border-0 my-4" />
 			<h1 class="text-2xl font-bold">About Me</h1>
