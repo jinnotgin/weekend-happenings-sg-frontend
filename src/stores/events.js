@@ -104,7 +104,7 @@ export const useEventsStore = defineStore("events", {
 			this.fetchEventsStatus = "fetching";
 			timeout_fakeLoading = setTimeout(() => {
 				this.fetchEventsStatus = "success";
-			}, 800);
+			}, 600);
 		},
 	},
 });
