@@ -10,7 +10,9 @@
     <svg class="curved-loop-svg" viewBox="0 0 1440 120">
       <text
         ref="measureRef"
+        font-weight="bold"
         xml:space="preserve"
+        :class="textClass"
         style="visibility: hidden; opacity: 0; pointer-events: none"
       >
         {{ text }}
@@ -83,7 +85,8 @@ const hasWindow = typeof window !== "undefined";
 const text = computed(() => {
   const hasTrailing = /\s|\u00A0$/.test(props.marqueeText);
   const trimmed = hasTrailing ? props.marqueeText.replace(/\s+$/, "") : props.marqueeText;
-  return `${trimmed}\u00A0`;
+  // return `${trimmed}\u00A0`;  // hack: due to scale-125 in Homeview, we have to also remove the last whitespace
+  return `${trimmed}`;
 });
 
 const textLength = computed(() => spacing.value);

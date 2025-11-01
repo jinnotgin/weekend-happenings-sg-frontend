@@ -320,9 +320,9 @@ onBeforeUnmount(() => {
 <template>
         <main class="flex flex-col gap-8 px-0">
 		<div
-			class="mx-auto flex w-full flex-col items-center bg-white/85 backdrop-blur pb-12 sm:pb-24"
-			v-show="events.fetchEventsStatus !== 'success'"
-		>
+			class="mx-auto flex w-full scale-125 flex-col items-center bg-white/85 backdrop-blur pb-14 sm:pb-28"
+			v-if="events.fetchEventsStatus !== 'success'"
+		> <!-- hack: using scale-125 to combat the popping issue-->
 			<div
 				class="flex w-full flex-col items-center gap-6"
 				v-show="
@@ -330,10 +330,11 @@ onBeforeUnmount(() => {
 					events.fetchEventsStatus === 'fetching'
 				"
 			>
+                                <!-- hack: due to using scale-125, we will begin wiht "zz" and end with "bu" (rather than end with "buzz")-->
 				<CurvedLoop
-					marquee-text="Syncing ✦ latest ✦ buzz ✦"
+					marquee-text="p ✦ Buzz ✦ Scoo"
 					text-class="font-sans uppercase tracking-[0.35em]"
-					:speed="2"
+					:speed="5"
 					:curve-amount="400"
 					:interactive="true"
 				/>
