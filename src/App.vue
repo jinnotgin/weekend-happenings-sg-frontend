@@ -6,114 +6,139 @@ import DropdownSelector from "@/components/DropdownSelector.vue";
 
 const route = useRoute();
 function isCurrentRoute(path) {
-	return route.path === path;
+        return route.path === path;
 }
 
 const events = useEventsStore();
 const timeRangeOptions = {
-	thisWeek: "this week",
-	thisWeekend: "this weekend",
-	nextWeek: "next week",
-	nextWeekend: "next weekend",
-	thisMonth: "this month",
-	nextMonth: "next month",
+        thisWeek: "this week",
+        thisWeekend: "this weekend",
+        nextWeek: "next week",
+        nextWeekend: "next weekend",
+        thisMonth: "this month",
+        nextMonth: "next month",
 };
 const activeTimeRange = ref("thisWeekend");
 function handleTimeRangeChange(newValue) {
-	events.triggerFakeLoading();
-	activeTimeRange.value = newValue;
+        events.triggerFakeLoading();
+        activeTimeRange.value = newValue;
 }
 
 const categoryOptions = computed(() => {
-	return ["all", ...events.categories];
+        return ["all", ...events.categories];
 });
 const activeCategory = ref("all");
 function handleCategoryChange(newValue) {
-	events.triggerFakeLoading();
-	activeCategory.value = newValue;
+        events.triggerFakeLoading();
+        activeCategory.value = newValue;
 }
+
+const currentYear = new Date().getFullYear();
 </script>
 
 <template>
-	<header
-		class="font-serif pt-10 px-5 max-w-2xl md:max-w-3xl lg:max-w-4xl xl:max-w-5xl 2xl:max-w-6xl mx-auto"
-	>
-		<div class="flex justify-between">
-			<RouterLink to="/">
-				<h1 class="text-4xl sm:text-5xl font-semibold text-orange-700">
-					Now in <span class="hidden sm:inline">Singapore</span> 🇸🇬
-				</h1>
-			</RouterLink>
-
-			<nav>
-				<RouterLink to="/" v-show="!isCurrentRoute('/')"
-					><button
-						class="border-2 border-orange-700 px-3 py-1 rounded-xl text-orange-700 hover:bg-orange-700 hover:text-white"
-					>
-						Home
-					</button></RouterLink
-				>
-				<RouterLink to="/about" v-show="!isCurrentRoute('/about')">
-					<button
-						class="border-2 border-orange-700 px-3 py-1 rounded-xl text-orange-700 hover:bg-orange-700 hover:text-white"
-					>
-						About
-					</button></RouterLink
-				>
-			</nav>
-		</div>
-
-		<h3
-			class="text-xl sm:text-2xl mt-4 flex flex-wrap items-center gap-x-2 gap-y-2"
-			v-show="isCurrentRoute('/')"
+		<header class="relative px-4 pt-8 pb-5 sm:px-6 sm:pt-10 sm:pb-6">
+                <div
+                        class="absolute inset-x-3 -top-10 h-48 rounded-[36px] bg-gradient-to-r from-[#ffe066] via-[#ff8ba7] to-[#8ec5ff] opacity-60 blur-3xl"
+                ></div>
+		<div
+			class="relative mx-auto flex w-full max-w-6xl flex-col gap-2 sm:gap-6 rounded-[32px] border-4 border-black bg-white/80 px-3 py-5 shadow-[16px_16px_0_#1f1b2c] backdrop-blur sm:gap-8 sm:px-6 sm:py-8"
 		>
-			<span>Explore</span>
-			<DropdownSelector
-				class="text-xl sm:text-2xl border-b-2 border-orange-700 transition hover:scale-105 hover:bg-red-100"
-				:options="categoryOptions"
-				:selectedValue="activeCategory"
-				@update:selectedValue="handleCategoryChange"
-			/>
-			<span>events happening</span>
-			<DropdownSelector
-				class="text-xl sm:text-2xl border-b-2 border-orange-700 transition hover:scale-105 hover:bg-red-100"
-				:options="timeRangeOptions"
-				:selectedValue="activeTimeRange"
-				@update:selectedValue="handleTimeRangeChange"
-			/>!
-		</h3>
-	</header>
-
-	<RouterView
-		class="font-serif pt-4 sm:pt-8"
-		:activeTimeRange="activeTimeRange"
-		:activeCategory="activeCategory"
-	/>
-	<footer
-		class="font-serif pt-10 pb-14 px-5 max-w-2xl md:max-w-3xl lg:max-w-4xl xl:max-w-5xl 2xl:max-w-6xl mx-auto flex justify-between"
-	>
-		<span
-			>Made by
-			<a
-				href="https://jinn.me"
-				class="underline text-orange-700"
-				target="_blank"
-				>Jin</a
-			>, © 2024</span
-		>
-		<VMenu placement="top">
-			<a href="mailto:nowinsg@jinn.me" class="underline">Submit your event</a>
-			<template #popper
-				><div class="bg-orange-700 text-white p-2">
-					nowinsg@jinn.me
-				</div></template
+			<div
+				class="grid items-start gap-3 [grid-template-columns:minmax(0,1fr)_auto] sm:flex sm:gap-6 sm:items-start sm:justify-between"
 			>
-		</VMenu>
-	</footer>
+				<RouterLink to="/" class="block w-full">
+					<h1
+						class="flex items-center gap-2 text-3xl font-bold leading-tight text-[#1f1b2c] sm:gap-3 sm:text-5xl md:text-6xl"
+					>
+						<span class="flex items-center gap-2">
+							<span>Now in</span>
+							<span class="hidden sm:inline">Singapore</span>
+						</span>
+						<span aria-hidden="true" class="text-3xl sm:text-4xl">🇸🇬</span>
+					</h1>
+					<p class="mt-1 font-sans text-xs uppercase tracking-[0.2em] text-[#f15a24] sm:mt-3 sm:text-base">
+						Fast finds for your next outing.
+					</p>
+				</RouterLink>
+
+				<nav class="flex flex-wrap justify-end gap-2 self-start sm:mt-0 sm:gap-3">
+					<RouterLink to="/" v-show="!isCurrentRoute('/')">
+						<button
+							class="rounded-full border-2 border-black bg-[#ffe066] px-3 py-1 font-sans text-xs font-semibold uppercase tracking-[0.2em] text-[#1f1b2c] shadow-[4px_4px_0_#1f1b2c] transition-transform hover:-translate-y-0.5 hover:shadow-[6px_6px_0_#f15a24] sm:px-4 sm:py-2 sm:text-sm sm:tracking-widest"
+						>
+							Home
+						</button>
+					</RouterLink>
+					<RouterLink to="/about" v-show="!isCurrentRoute('/about')">
+						<button
+							class="rounded-full border-2 border-black bg-white px-3 py-1 font-sans text-xs font-semibold uppercase tracking-[0.2em] text-[#1f1b2c] shadow-[4px_4px_0_#1f1b2c] transition-transform hover:-translate-y-0.5 hover:bg-[#ff8ba7] hover:shadow-[6px_6px_0_#f15a24] sm:px-4 sm:py-2 sm:text-sm sm:tracking-widest"
+						>
+							About
+						</button>
+					</RouterLink>
+				</nav>
+                        </div>
+
+			<h3
+				class="flex flex-wrap items-center justify-start gap-x-2 gap-y-1 leading-10 font-serif text-sm text-[#1f1b2c] sm:flex-nowrap sm:text-xl md:text-2xl"
+				v-show="isCurrentRoute('/')"
+			>
+				<span>Explore</span>
+				<DropdownSelector
+					class="text-sm sm:text-xl"
+					:options="categoryOptions"
+					:selectedValue="activeCategory"
+					@update:selectedValue="handleCategoryChange"
+				/>
+				<span>events happening</span>
+				<DropdownSelector
+					class="text-sm sm:text-xl"
+					:options="timeRangeOptions"
+					:selectedValue="activeTimeRange"
+					@update:selectedValue="handleTimeRangeChange"
+                                />!
+                        </h3>
+                </div>
+        </header>
+
+	<main class="px-4 pb-10 pt-6 sm:px-5 sm:pb-14 sm:pt-8">
+                <RouterView
+                        class="mx-auto w-full max-w-6xl"
+                        :activeTimeRange="activeTimeRange"
+                        :activeCategory="activeCategory"
+                />
+        </main>
+	<footer class="px-4 pb-8 sm:px-5 sm:pb-14">
+		<div
+			class="mx-auto flex w-full max-w-6xl flex-col items-start justify-between gap-4 rounded-[28px] border-4 border-black bg-white/80 px-5 py-5 font-serif text-base shadow-[16px_16px_0_#1f1b2c] backdrop-blur md:flex-row md:items-center"
+		>
+                        <span class="font-sans text-sm uppercase tracking-[0.3em] text-[#1f1b2c]">
+                                Made by
+                                <a
+                                        href="https://jinn.me"
+                                        class="underline decoration-2 decoration-[#f15a24] underline-offset-4 hover:text-[#f15a24]"
+                                        target="_blank"
+                                >
+                                        Jin
+                                </a>
+                                · © {{ currentYear }}
+                        </span>
+                        <VMenu placement="top">
+                                <a
+                                        href="mailto:nowinsg@jinn.me"
+                                        class="font-sans text-sm uppercase tracking-[0.3em] text-[#1f1b2c] underline decoration-dotted underline-offset-4 hover:text-[#f15a24]"
+                                >
+                                        Submit your event
+                                </a>
+                                <template #popper
+                                        ><div class="rounded-md bg-[#1f1b2c] px-3 py-2 font-sans text-xs text-white">
+                                                nowinsg@jinn.me
+                                        </div></template
+                                >
+                        </VMenu>
+                </div>
+        </footer>
 </template>
 
-<style>
-body {
-	background: #fcf8f7;
-}
-</style>
+<style></style>
