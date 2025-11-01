@@ -334,7 +334,7 @@ onBeforeUnmount(() => {
 				<CurvedLoop
 					marquee-text="p ✦ Buzz ✦ Scoo"
 					text-class="font-sans uppercase tracking-[0.35em]"
-					:speed="5"
+					:speed="3.5"
 					:curve-amount="400"
 					:interactive="true"
 				/>
