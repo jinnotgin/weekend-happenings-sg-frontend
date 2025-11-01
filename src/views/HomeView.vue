@@ -250,6 +250,10 @@ const startHold = (direction) => {
                                 : 0;
                         scrollToPageBoundary("down");
                 }
+
+                if ("vibrate" in navigator) {
+                        navigator.vibrate(500); // Vibrates for 500 milliseconds
+                }
         }, holdDelayMs);
 };
 
@@ -330,18 +334,27 @@ onBeforeUnmount(() => {
 					events.fetchEventsStatus === 'fetching'
 				"
 			>
-                                <!-- hack: due to using scale-125, we will begin wiht "zz" and end with "bu" (rather than end with "buzz")-->
+                                <!-- hack: due to using scale-125, we will begin with "p" and end with "Scoo" (rather than end with "Scoop")-->
+                                <!-- CurveLoop component has a hack as well due to this, refer to the component to see more -->
 				<CurvedLoop
 					marquee-text="p ✦ Buzz ✦ Scoo"
 					text-class="font-sans uppercase tracking-[0.35em]"
 					:speed="3.5"
 					:curve-amount="400"
-					:interactive="true"
+					:interactive="false"
 				/>
 			</div>
-			<p class="font-sans text-sm sm:text-lg" v-show="events.fetchEventsStatus === 'error'">
-				There was an error loading this page. Please try again later!
-			</p>
+			<div
+				v-show="events.fetchEventsStatus === 'error'"
+				class="mx-auto w-full max-w-6xl rounded-[32px] border-4 border-black bg-[#ff8ba7]/20 px-4 py-8 text-center font-sans shadow-[8px_8px_0_#1f1b2c] backdrop-blur sm:px-8 sm:py-10 sm:shadow-[16px_16px_0_#f15a24]"
+			>
+				<p class="text-base font-semibold text-[#1f1b2c] sm:text-2xl">
+					There was an error loading this page.
+				</p>
+				<p class="mt-4 text-xs uppercase tracking-[0.3em] text-[#f15a24] sm:text-sm">
+					Please try again later!
+				</p>
+			</div>
 		</div>
 		<div
 			v-show="events.fetchEventsStatus === 'success'"
@@ -349,14 +362,14 @@ onBeforeUnmount(() => {
 		>
 			<div v-if="filteredEvents.length > 0" class="mx-auto max-w-4xl text-center">
 				<p class="font-sans text-xs sm:text-sm uppercase tracking-[0.4em] text-[#1f1b2c]/70">
-					Information may be imperfect - double check before you head out!
+					Information may be imperfect - double check first!
 				</p>
 			</div>
 			<div
 				v-show="filteredEvents.length === 0"
 				class="mx-auto w-full max-w-6xl rounded-[32px] border-4 border-black bg-white/80 px-4 py-8 text-center font-sans text-sm shadow-[8px_8px_0_#1f1b2c] backdrop-blur sm:px-8 sm:py-12 sm:text-lg sm:shadow-[16px_16px_0_#1f1b2c]"
 			>
-                                <p>Oh no! 😞 We couldn't find any events for this category and time range.</p>
+                                <p>Oh no! 😞 We couldn't find any events for this category / time period.</p>
                                 <p class="mt-4 text-xs uppercase tracking-[0.3em] text-[#f15a24] sm:text-sm">
                                         Try adjusting your filters for more results!
                                 </p>
@@ -375,7 +388,6 @@ onBeforeUnmount(() => {
                                 >
 				<div
 					class="group relative bg-white/80 overflow-hidden rounded-[32px] border-4 border-black bg-white/85 px-4 py-5 shadow-[8px_8px_0_#1f1b2c] backdrop-blur transition-all duration-200 sm:px-8 sm:py-8 md:hover:-translate-y-1 md:hover:shadow-[16px_16px_0_#f15a24]"
-					:class="{ 'mobile-active-card': isMobile && activeEventIndex === index }"
 				>
                                                 <div
                                                         class="pointer-events-none absolute -right-16 -top-16 h-56 w-56 rounded-full bg-gradient-to-br from-[#ffe066] via-[#ff8ba7] to-[#8ec5ff] opacity-40 blur-3xl transition-opacity group-hover:opacity-60"
@@ -487,7 +499,7 @@ onBeforeUnmount(() => {
                         </ul>
 				<div
 					v-if="shouldShowNavigator"
-					class="nav-pill sm:hidden fixed select-none bottom-1.5 left-1/2 z-40 flex -translate-x-1/2 items-center gap-2 rounded-full border border-white/20 bg-[#1f1b2c]/80 px-3 py-1.5 text-white backdrop-blur-lg"
+					class="nav-pill lg:hidden fixed select-none bottom-0.5 left-1/2 z-40 flex -translate-x-1/2 items-center gap-2 rounded-full border border-white/20 bg-[#1f1b2c]/80 px-3 py-1.5 text-white backdrop-blur-lg"
 					:style="{ paddingBottom: 'calc(env(safe-area-inset-bottom) + 0.25rem)' }"
 				>
 					<button
@@ -533,11 +545,6 @@ onBeforeUnmount(() => {
 </template>
 
 <style scoped>
-.mobile-active-card {
-        transform: translateY(-4px);
-        box-shadow: 16px 16px 0 #f15a24;
-}
-
 .nav-pill {
         transition: transform 0.2s ease, box-shadow 0.2s ease;
 }

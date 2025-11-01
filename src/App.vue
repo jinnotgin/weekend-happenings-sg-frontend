@@ -117,7 +117,7 @@ const currentYear = new Date().getFullYear();
                         :activeCategory="activeCategory"
                 />
         </main>
-	<footer class="pl-4 pr-6 pb-24 sm:pb-14">
+	<footer class="pl-4 pr-6 pb-24 lg:pb-14">
 		<div
 			class="mx-auto flex w-full max-w-6xl flex-col items-start justify-between gap-4 rounded-[28px] border-4 border-black bg-white/80 px-5 py-5 font-serif text-sm sm:text-base shadow-[8px_8px_0_#1f1b2c] backdrop-blur sm:shadow-[16px_16px_0_#1f1b2c] md:flex-row md:items-center"
 		>
