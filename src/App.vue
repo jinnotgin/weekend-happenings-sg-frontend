@@ -94,14 +94,14 @@ const currentYear = new Date().getFullYear();
 			>
 				<span>Explore</span>
 				<DropdownSelector
-					class="text-sm sm:text-xl mr-2"
+					class="text-sm sm:text-xl mr-1 sm:mr-2"
 					:options="categoryOptions"
 					:selectedValue="activeCategory"
 					@update:selectedValue="handleCategoryChange"
 				/>
 				<span>events happening</span>
 				<DropdownSelector
-					class="text-sm sm:text-xl mr-2"
+					class="text-sm sm:text-xl mr-1 sm:mr-2"
 					:options="timeRangeOptions"
 					:selectedValue="activeTimeRange"
 					@update:selectedValue="handleTimeRangeChange"
@@ -110,7 +110,7 @@ const currentYear = new Date().getFullYear();
                 </div>
         </header>
 
-	<main class="pl-4 pr-6 pb-8 pt-6 sm:pb-14 sm:pt-8">
+	<main class="pl-4 pr-6 pb-8 pt-4 sm:pb-14 sm:pt-8">
                 <RouterView
                         class="mx-auto w-full max-w-6xl"
                         :activeTimeRange="activeTimeRange"

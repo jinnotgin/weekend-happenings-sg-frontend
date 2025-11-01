@@ -39,10 +39,10 @@ const filteredEvents = computed(() => {
                                 There was an error loading this page. Please try again later!
                         </p>
 		</div>
-		<div v-show="events.fetchEventsStatus === 'success'" class="flex flex-col gap-8 pb-6">
+		<div v-show="events.fetchEventsStatus === 'success'" class="flex flex-col gap-6 pb-6 lg:gap-8">
 			<div v-if="filteredEvents.length > 0" class="mx-auto max-w-4xl text-center">
 				<p class="font-sans text-sm uppercase tracking-[0.4em] text-[#1f1b2c]/70">
-					Information may be imperfect—double check before you head out!
+					Information may be imperfect - double check before you head out!
 				</p>
 			</div>
 			<div
@@ -151,7 +151,7 @@ const filteredEvents = computed(() => {
                                                                 </div>
                                                         </div>
                                                 </div>
-                                                <div class="lg:max-w-xs lg:flex-none">
+                                                <div class="lg:flex-none lg:w-80">
                                                         <a
                                                                 :href="event.link"
                                                                 target="_blank"
