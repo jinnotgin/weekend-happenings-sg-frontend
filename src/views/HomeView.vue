@@ -1,6 +1,5 @@
 <script setup>
 import {
-        defineProps,
         computed,
         ref,
         onMounted,
@@ -10,6 +9,7 @@ import {
 } from "vue";
 import { useEventsStore } from "@/stores/events.js";
 import VueFeather from "vue-feather";
+import CurvedLoop from "@/components/CurvedLoop.vue";
 
 const events = useEventsStore();
 const props = defineProps({
@@ -320,21 +320,27 @@ onBeforeUnmount(() => {
 <template>
         <main class="flex flex-col gap-8 px-0">
 		<div
-			class="mx-auto flex w-full max-w-xl flex-col items-center gap-4 rounded-[32px] border-4 border-dashed border-[#1f1b2c]/40 bg-white/80 px-3 py-7 text-center shadow-[8px_8px_0_#1f1b2c] backdrop-blur sm:px-6 sm:py-12"
+			class="mx-auto flex w-full flex-col items-center bg-white/85 backdrop-blur pb-12 sm:pb-24"
 			v-show="events.fetchEventsStatus !== 'success'"
 		>
-			<p
-				class="font-sans text-sm sm:text-lg"
-                                v-show="
-                                        events.fetchEventsStatus === 'idle' ||
-                                        events.fetchEventsStatus === 'fetching'
-                                "
-                        >
-                                Revving the time machine… fetching the latest happenings.
-                        </p>
-                        <p class="font-sans text-sm sm:text-lg" v-show="events.fetchEventsStatus === 'error'">
-                                There was an error loading this page. Please try again later!
-                        </p>
+			<div
+				class="flex w-full flex-col items-center gap-6"
+				v-show="
+					events.fetchEventsStatus === 'idle' ||
+					events.fetchEventsStatus === 'fetching'
+				"
+			>
+				<CurvedLoop
+					marquee-text="Syncing ✦ latest ✦ buzz ✦"
+					text-class="font-sans uppercase tracking-[0.35em]"
+					:speed="2"
+					:curve-amount="400"
+					:interactive="true"
+				/>
+			</div>
+			<p class="font-sans text-sm sm:text-lg" v-show="events.fetchEventsStatus === 'error'">
+				There was an error loading this page. Please try again later!
+			</p>
 		</div>
 		<div
 			v-show="events.fetchEventsStatus === 'success'"
