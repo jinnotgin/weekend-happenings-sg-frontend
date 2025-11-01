@@ -31,13 +31,13 @@ const eventListRef = ref(null);
 const eventElements = ref([]);
 const visibleEventIndexes = ref([]);
 const activeEventIndex = ref(0);
-const bounceDirection = ref(null);
 const isMobile = ref(false);
-let bounceTimeoutId = null;
-let scrollCheckTimeoutId = null;
 let scrollRafId = null;
 let observer;
 let mediaQuery;
+let holdTimeoutId = null;
+let holdFired = false;
+let holdIgnoreTimeoutId = null;
 const handleMediaChange = (event) => {
         isMobile.value = event.matches;
 };
@@ -155,27 +155,13 @@ const refreshEventElements = async () => {
         updateActiveEventIndex();
 };
 
-const triggerBounce = (direction) => {
-        bounceDirection.value = direction;
-        if (bounceTimeoutId) {
-                clearTimeout(bounceTimeoutId);
-                bounceTimeoutId = null;
-        }
-        bounceTimeoutId = window.setTimeout(() => {
-                bounceDirection.value = null;
-                bounceTimeoutId = null;
-        }, 400);
-};
-
-const scrollToEvent = (index, direction) => {
+const scrollToEvent = (index) => {
         const target = eventElements.value[index];
         if (!target) {
-                triggerBounce(direction);
                 return;
         }
 
         activeEventIndex.value = index;
-        const startingScroll = window.scrollY;
         const scrollMargin = 16;
         const targetTop =
                 target.getBoundingClientRect().top + window.scrollY - scrollMargin;
@@ -184,22 +170,9 @@ const scrollToEvent = (index, direction) => {
                 top: Math.max(targetTop, 0),
                 behavior: "smooth",
         });
-
-        if (scrollCheckTimeoutId) {
-                clearTimeout(scrollCheckTimeoutId);
-                scrollCheckTimeoutId = null;
-        }
-        scrollCheckTimeoutId = window.setTimeout(() => {
-                const delta = Math.abs(window.scrollY - startingScroll);
-                if (delta < 2) {
-                        triggerBounce(direction);
-                }
-                scrollCheckTimeoutId = null;
-        }, 500);
 };
 
 const scrollToPageBoundary = (direction) => {
-        const startingScroll = window.scrollY;
         const scrollingElement =
                 document.scrollingElement || document.documentElement;
         const targetPosition =
@@ -214,18 +187,6 @@ const scrollToPageBoundary = (direction) => {
                 top: targetPosition,
                 behavior: "smooth",
         });
-
-        if (scrollCheckTimeoutId) {
-                clearTimeout(scrollCheckTimeoutId);
-                scrollCheckTimeoutId = null;
-        }
-        scrollCheckTimeoutId = window.setTimeout(() => {
-                const delta = Math.abs(window.scrollY - startingScroll);
-                if (delta < 2) {
-                        triggerBounce(direction);
-                }
-                scrollCheckTimeoutId = null;
-        }, 500);
 };
 
 const handleNavigate = (direction) => {
@@ -245,7 +206,7 @@ const handleNavigate = (direction) => {
                         scrollToPageBoundary("up");
                         return;
                 }
-                scrollToEvent(currentIndex - 1, "up");
+                scrollToEvent(currentIndex - 1);
                 return;
         }
 
@@ -254,7 +215,57 @@ const handleNavigate = (direction) => {
                 scrollToPageBoundary("down");
                 return;
         }
-        scrollToEvent(currentIndex + 1, "down");
+        scrollToEvent(currentIndex + 1);
+};
+
+const holdDelayMs = 500;
+
+const resetHoldFired = () => {
+        holdFired = false;
+        if (holdIgnoreTimeoutId) {
+                clearTimeout(holdIgnoreTimeoutId);
+                holdIgnoreTimeoutId = null;
+        }
+};
+
+const startHold = (direction) => {
+        resetHoldFired();
+        stopHold();
+        holdTimeoutId = window.setTimeout(() => {
+                holdTimeoutId = null;
+                holdFired = true;
+                if (holdIgnoreTimeoutId) {
+                        clearTimeout(holdIgnoreTimeoutId);
+                }
+                holdIgnoreTimeoutId = window.setTimeout(() => {
+                        holdFired = false;
+                        holdIgnoreTimeoutId = null;
+                }, 350);
+                if (direction === "up") {
+                        activeEventIndex.value = 0;
+                        scrollToPageBoundary("up");
+                } else {
+                        activeEventIndex.value = totalEvents.value
+                                ? totalEvents.value - 1
+                                : 0;
+                        scrollToPageBoundary("down");
+                }
+        }, holdDelayMs);
+};
+
+const stopHold = () => {
+        if (holdTimeoutId) {
+                clearTimeout(holdTimeoutId);
+                holdTimeoutId = null;
+        }
+};
+
+const handleNavigatorClick = (direction) => {
+        if (holdFired) {
+                resetHoldFired();
+                return;
+        }
+        handleNavigate(direction);
 };
 
 onMounted(() => {
@@ -301,14 +312,8 @@ onBeforeUnmount(() => {
                 window.cancelAnimationFrame(scrollRafId);
                 scrollRafId = null;
         }
-        if (bounceTimeoutId) {
-                clearTimeout(bounceTimeoutId);
-                bounceTimeoutId = null;
-        }
-        if (scrollCheckTimeoutId) {
-                clearTimeout(scrollCheckTimeoutId);
-                scrollCheckTimeoutId = null;
-        }
+        stopHold();
+        resetHoldFired();
 });
 </script>
 
@@ -334,10 +339,6 @@ onBeforeUnmount(() => {
 		<div
 			v-show="events.fetchEventsStatus === 'success'"
 			class="flex flex-col gap-6 pb-6 lg:gap-8"
-			:class="{
-				'pb-28': shouldShowNavigator,
-				'sm:pb-6': shouldShowNavigator,
-			}"
 		>
 			<div v-if="filteredEvents.length > 0" class="mx-auto max-w-4xl text-center">
 				<p class="font-sans text-xs sm:text-sm uppercase tracking-[0.4em] text-[#1f1b2c]/70">
@@ -366,7 +367,7 @@ onBeforeUnmount(() => {
                                         :data-event-index="index"
                                 >
 				<div
-					class="group relative overflow-hidden rounded-[32px] border-4 border-black bg-white/85 px-4 py-5 shadow-[8px_8px_0_#1f1b2c] backdrop-blur transition-all duration-200 sm:px-8 sm:py-8 md:hover:-translate-y-1 md:hover:shadow-[16px_16px_0_#f15a24]"
+					class="group relative bg-white/80 overflow-hidden rounded-[32px] border-4 border-black bg-white/85 px-4 py-5 shadow-[8px_8px_0_#1f1b2c] backdrop-blur transition-all duration-200 sm:px-8 sm:py-8 md:hover:-translate-y-1 md:hover:shadow-[16px_16px_0_#f15a24]"
 					:class="{ 'mobile-active-card': isMobile && activeEventIndex === index }"
 				>
                                                 <div
@@ -480,16 +481,18 @@ onBeforeUnmount(() => {
 				<div
 					v-if="shouldShowNavigator"
 					class="nav-pill sm:hidden fixed bottom-4 left-1/2 z-40 flex -translate-x-1/2 items-center gap-2 rounded-full border border-white/20 bg-[#1f1b2c]/80 px-3 py-1.5 text-white backdrop-blur-lg"
-					:class="{
-						'nav-pill--bounce-up': bounceDirection === 'up',
-						'nav-pill--bounce-down': bounceDirection === 'down',
-					}"
 					:style="{ paddingBottom: 'calc(env(safe-area-inset-bottom) + 0.25rem)' }"
 				>
 					<button
 						type="button"
 						class="flex h-8 w-8 items-center justify-center rounded-full border border-white/30 bg-white/90 text-[#1f1b2c] transition-transform active:translate-y-0.5 active:scale-95"
-						@click="handleNavigate('up')"
+						@click="handleNavigatorClick('up')"
+						@mousedown.prevent="startHold('up')"
+						@touchstart="startHold('up')"
+						@mouseup.prevent="stopHold"
+						@mouseleave="stopHold"
+						@touchend="stopHold"
+						@touchcancel="stopHold"
 						aria-label="Scroll to previous event"
 					>
 						<vue-feather type="chevron-up" class="h-5 w-5" />
@@ -500,7 +503,13 @@ onBeforeUnmount(() => {
 					<button
 						type="button"
 						class="flex h-8 w-8 items-center justify-center rounded-full border border-white/30 bg-white/90 text-[#1f1b2c] transition-transform active:translate-y-0.5 active:scale-95"
-						@click="handleNavigate('down')"
+						@click="handleNavigatorClick('down')"
+						@mousedown.prevent="startHold('down')"
+						@touchstart="startHold('down')"
+						@mouseup.prevent="stopHold"
+						@mouseleave="stopHold"
+						@touchend="stopHold"
+						@touchcancel="stopHold"
 						aria-label="Scroll to next event"
 					>
 						<vue-feather type="chevron-down" class="h-5 w-5" />
@@ -524,37 +533,5 @@ onBeforeUnmount(() => {
 
 .nav-pill {
         transition: transform 0.2s ease, box-shadow 0.2s ease;
-}
-
-.nav-pill--bounce-up {
-        animation: nav-pill-bounce-up 0.45s ease;
-}
-
-.nav-pill--bounce-down {
-        animation: nav-pill-bounce-down 0.45s ease;
-}
-
-@keyframes nav-pill-bounce-up {
-        0% {
-                transform: translate(-50%, 0);
-        }
-        45% {
-                transform: translate(-50%, -8px);
-        }
-        100% {
-                transform: translate(-50%, 0);
-        }
-}
-
-@keyframes nav-pill-bounce-down {
-        0% {
-                transform: translate(-50%, 0);
-        }
-        45% {
-                transform: translate(-50%, 8px);
-        }
-        100% {
-                transform: translate(-50%, 0);
-        }
 }
 </style>
