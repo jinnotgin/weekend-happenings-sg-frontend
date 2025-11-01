@@ -82,7 +82,7 @@ export function getDateRanges(inputDate = new Date()) {
  * @param {Array<string>} withinRange - The date range within which to check for an overlap.
  * @param {Array<string>} findRange - The date range to check for an overlap within the withinRange.
  * @returns {boolean} True if there is an overlap between the date ranges, otherwise false.
- * If any date in the ranges is null, it returns true, assuming incomplete data to fully evaluate.
+ * If any date in the ranges is null, it returns false, excluding events with indeterminate ranges.
  */
 export function checkDateOverlap(withinRange, findRange) {
 	const normalizeRange = (range) => {
@@ -118,9 +118,9 @@ export function checkDateOverlap(withinRange, findRange) {
 	const [withinStart, withinEnd] = normalizeRange(withinRange).map(parseDate);
 	const [findStart, findEnd] = normalizeRange(findRange).map(parseDate);
 
-	// If any date is null, return true, as we cannot fully evaluate overlap
+	// If any date is null, exclude the range as it cannot be confidently matched
 	if (!withinStart || !withinEnd || !findStart || !findEnd) {
-		return true;
+		return false;
 	}
 
 	// Check if there is no overlap between the two ranges

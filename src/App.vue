@@ -66,7 +66,7 @@ const currentYear = new Date().getFullYear();
 						<span aria-hidden="true" class="text-3xl sm:text-4xl">🇸🇬</span>
 					</h1>
 					<p class="mt-1 font-sans text-xs uppercase tracking-[0.2em] text-[#f15a24] sm:mt-3 sm:text-base">
-						F<span class="hidden sm:inline">ast f</span>inds for your next outing.
+						F<span class="hidden sm:inline">ast f</span>inds for your<span class="hidden sm:inline"> next</span> outing<span class="inline sm:hidden">s</span>.
 					</p>
 				</RouterLink>
 
@@ -89,19 +89,19 @@ const currentYear = new Date().getFullYear();
                         </div>
 
 			<h3
-				class="flex flex-wrap items-center justify-start gap-x-2 gap-y-1 leading-10 font-serif text-sm text-[#1f1b2c] sm:flex-nowrap sm:text-xl md:text-2xl"
+				class="flex flex-wrap items-center justify-start gap-x-2 gap-y-1 leading-10 font-serif text-xs text-[#1f1b2c] sm:flex-nowrap sm:text-xl md:text-2xl"
 				v-show="isCurrentRoute('/')"
 			>
 				<span>Explore</span>
 				<DropdownSelector
-					class="text-sm sm:text-xl mr-1 sm:mr-2"
+					class="text-xs sm:text-lg md:text-xl mr-1 sm:mr-2"
 					:options="categoryOptions"
 					:selectedValue="activeCategory"
 					@update:selectedValue="handleCategoryChange"
 				/>
 				<span>events happening</span>
 				<DropdownSelector
-					class="text-sm sm:text-xl mr-1 sm:mr-2"
+					class="text-xs sm:text-lg md:text-xl mr-1 sm:mr-2"
 					:options="timeRangeOptions"
 					:selectedValue="activeTimeRange"
 					@update:selectedValue="handleTimeRangeChange"
@@ -119,9 +119,9 @@ const currentYear = new Date().getFullYear();
         </main>
 	<footer class="pl-4 pr-6 pb-8 sm:pb-14">
 		<div
-			class="mx-auto flex w-full max-w-6xl flex-col items-start justify-between gap-4 rounded-[28px] border-4 border-black bg-white/80 px-5 py-5 font-serif text-base shadow-[8px_8px_0_#1f1b2c] backdrop-blur sm:shadow-[16px_16px_0_#1f1b2c] md:flex-row md:items-center"
+			class="mx-auto flex w-full max-w-6xl flex-col items-start justify-between gap-4 rounded-[28px] border-4 border-black bg-white/80 px-5 py-5 font-serif text-sm sm:text-base shadow-[8px_8px_0_#1f1b2c] backdrop-blur sm:shadow-[16px_16px_0_#1f1b2c] md:flex-row md:items-center"
 		>
-                        <span class="font-sans text-sm uppercase tracking-[0.3em] text-[#1f1b2c]">
+                        <span class="font-sans text-xs sm:text-sm uppercase tracking-[0.3em] text-[#1f1b2c]">
                                 Made by
                                 <a
                                         href="https://jinn.me"
@@ -135,7 +135,7 @@ const currentYear = new Date().getFullYear();
                         <VMenu placement="top">
                                 <a
                                         href="mailto:nowinsg@jinn.me"
-                                        class="font-sans text-sm uppercase tracking-[0.3em] text-[#1f1b2c] underline decoration-dotted underline-offset-4 hover:text-[#f15a24]"
+                                        class="font-sans text-xs sm:text-sm uppercase tracking-[0.3em] text-[#1f1b2c] underline decoration-dotted underline-offset-4 hover:text-[#f15a24]"
                                 >
                                         Submit your event
                                 </a>

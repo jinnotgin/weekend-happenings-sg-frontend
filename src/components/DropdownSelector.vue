@@ -46,7 +46,7 @@ const selectOption = (value) => {
 			@click="toggleDropdown"
 			class="flex items-center gap-2 rounded-full border-2 border-black bg-[#fff4d6] px-3 py-1 font-sans text-xs uppercase tracking-[0.2em] text-[#1f1b2c] shadow-[4px_4px_0_#1f1b2c] transition-all duration-150 hover:-translate-y-0.5 hover:bg-[#ff8ba7] hover:shadow-[6px_6px_0_#f15a24] focus:outline-none focus-visible:ring-4 focus-visible:ring-[#8ec5ff]/60 sm:px-4 sm:py-1.5 sm:text-sm sm:tracking-[0.3em]"
 		>
-			<span class="max-w-[180px] truncate text-left text-sm sm:max-w-[260px] sm:text-base">
+			<span class="max-w-[180px] truncate text-left text-xs sm:max-w-[260px] sm:text-base">
 				{{
 					Array.isArray(props.options)
 						? props.selectedValue
@@ -55,7 +55,7 @@ const selectOption = (value) => {
 						: "Dropdown"
 				}}</span
 			>
-			<vue-feather type="chevron-down" size="28" class="ml-1 h-4 w-4 sm:h-5 sm:w-5" />
+			<vue-feather type="chevron-down" size="24" class="ml-1 h-3 w-3 sm:h-5 sm:w-5" />
 		</button>
 
                 <template #popper>
@@ -63,7 +63,7 @@ const selectOption = (value) => {
                                 v-for="(value, index) in props.options"
                                 :key="index"
                                 href="#"
-                                class="block border-b border-black/10 bg-white px-4 py-2 font-sans text-sm uppercase tracking-[0.2em] text-[#1f1b2c] transition-colors last:border-b-0 hover:bg-[#ffe066]/60"
+                                class="block border-b border-black/10 bg-white px-4 py-2 font-sans text-xs uppercase tracking-[0.2em] text-[#1f1b2c] transition-colors last:border-b-0 hover:bg-[#ffe066]/60 sm:text-sm"
                                 :class="{
                                         'font-bold':
                                                 props.selectedValue ===

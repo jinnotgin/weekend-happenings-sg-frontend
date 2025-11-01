@@ -27,7 +27,7 @@ const filteredEvents = computed(() => {
 			v-show="events.fetchEventsStatus !== 'success'"
 		>
 			<p
-				class="font-sans text-base sm:text-lg"
+				class="font-sans text-sm sm:text-lg"
                                 v-show="
                                         events.fetchEventsStatus === 'idle' ||
                                         events.fetchEventsStatus === 'fetching'
@@ -35,7 +35,7 @@ const filteredEvents = computed(() => {
                         >
                                 Revving the time machine… fetching the latest happenings.
                         </p>
-                        <p class="font-sans text-base sm:text-lg" v-show="events.fetchEventsStatus === 'error'">
+                        <p class="font-sans text-sm sm:text-lg" v-show="events.fetchEventsStatus === 'error'">
                                 There was an error loading this page. Please try again later!
                         </p>
 		</div>
@@ -47,7 +47,7 @@ const filteredEvents = computed(() => {
 			</div>
 			<div
 				v-show="filteredEvents.length === 0"
-				class="mx-auto w-full max-w-6xl rounded-[32px] border-4 border-black bg-white/80 px-4 py-8 text-center font-sans text-base shadow-[8px_8px_0_#1f1b2c] backdrop-blur sm:px-8 sm:py-12 sm:text-lg sm:shadow-[16px_16px_0_#1f1b2c]"
+				class="mx-auto w-full max-w-6xl rounded-[32px] border-4 border-black bg-white/80 px-4 py-8 text-center font-sans text-sm shadow-[8px_8px_0_#1f1b2c] backdrop-blur sm:px-8 sm:py-12 sm:text-lg sm:shadow-[16px_16px_0_#1f1b2c]"
 			>
                                 <p>Oh no! 😞 We couldn't find any events for this category and time range.</p>
                                 <p class="mt-4 text-xs uppercase tracking-[0.3em] text-[#f15a24] sm:text-sm">
@@ -71,7 +71,7 @@ const filteredEvents = computed(() => {
                                                                         :href="event.link"
                                                                         target="_blank"
                                                                         rel="noopener"
-                                                                        class="min-w-0 flex-1 text-2xl font-bold leading-tight text-[#1f1b2c] underline-offset-8 transition-colors hover:text-[#f15a24] hover:underline sm:text-3xl"
+                                                                        class="min-w-0 flex-1 text-xl font-bold leading-tight text-[#1f1b2c] underline-offset-8 transition-colors hover:text-[#f15a24] hover:underline sm:text-3xl"
                                                                 >
                                                                         <span class="min-w-0 break-words">{{ event.title }}</span>
                                                                 </a>
@@ -81,9 +81,9 @@ const filteredEvents = computed(() => {
                                                                                 target="_blank"
                                                                                 rel="noopener"
                                                                                 aria-label="Open event in a new tab"
-                                                                                class="flex h-9 w-9 items-center justify-center rounded-full border-2 border-[#1f1b2c] bg-white text-[#f15a24] shadow-[4px_4px_0_#1f1b2c] transition-all hover:-translate-y-0.5 hover:shadow-[6px_6px_0_#f15a24]"
+                                                                                class="flex h-8 w-8 items-center justify-center rounded-full border-2 border-[#1f1b2c] bg-white text-[#f15a24] shadow-[4px_4px_0_#1f1b2c] transition-all hover:-translate-y-0.5 hover:shadow-[6px_6px_0_#f15a24] sm:h-9 sm:w-9"
                                                                         >
-                                                                                <vue-feather type="arrow-up-right" class="h-4 w-4" />
+                                                                                <vue-feather type="arrow-up-right" class="h-4 w-4 sm:h-5 sm:w-5" />
                                                                         </a>
                                                                         <VMenu class="hidden sm:inline-flex">
                                                                                 <button
@@ -115,27 +115,27 @@ const filteredEvents = computed(() => {
                                                                         </VMenu>
                                                                 </div>
                                                         </div>
-                                                        <p class="font-sans text-base leading-relaxed text-[#1f1b2c] sm:text-lg">
+                                                        <p class="font-sans text-sm leading-relaxed text-[#1f1b2c] sm:text-lg">
                                                                 {{ event.description }}
                                                         </p>
 					<div class="grid items-start gap-3 sm:grid-cols-3 sm:gap-6">
-                                                                <div class="rounded-2xl border-2 border-dashed border-[#1f1b2c]/40 bg-[#ffe066]/30 px-4 py-3">
+                                                                <div class="rounded-2xl border-2 border-dashed border-[#1f1b2c]/40 bg-[#ffe066]/30 px-3 py-2.5 sm:px-4 sm:py-3">
                                                                         <p class="font-sans text-xs uppercase tracking-[0.3em] text-[#f15a24]">
                                                                                 Date
                                                                         </p>
-                                                                        <p class="mt-2 font-serif text-lg text-[#1f1b2c]">
+                                                                        <p class="mt-2 font-serif text-base text-[#1f1b2c] sm:text-lg">
                                                                                 {{ event.datetime }}
                                                                         </p>
                                                                 </div>
-                                                                <div class="rounded-2xl border-2 border-dashed border-[#1f1b2c]/40 bg-[#8ec5ff]/20 px-4 py-3">
+                                                                <div class="rounded-2xl border-2 border-dashed border-[#1f1b2c]/40 bg-[#8ec5ff]/20 px-3 py-2.5 sm:px-4 sm:py-3">
                                                                         <p class="font-sans text-xs uppercase tracking-[0.3em] text-[#f15a24]">
                                                                                 Location
                                                                         </p>
-                                                                        <p class="mt-2 font-serif text-lg text-[#1f1b2c]">
+                                                                        <p class="mt-2 font-serif text-base text-[#1f1b2c] sm:text-lg">
                                                                                 {{ event.location }}
                                                                         </p>
                                                                 </div>
-                                                                <div class="rounded-2xl border-2 border-dashed border-[#1f1b2c]/40 bg-[#ff8ba7]/20 px-4 py-3">
+                                                                <div class="rounded-2xl border-2 border-dashed border-[#1f1b2c]/40 bg-[#ff8ba7]/20 px-3 py-2.5 sm:px-4 sm:py-3">
                                                                         <p class="font-sans text-xs uppercase tracking-[0.3em] text-[#f15a24]">
                                                                                 Type
                                                                         </p>
