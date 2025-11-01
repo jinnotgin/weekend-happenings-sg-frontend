@@ -1,14 +1,14 @@
 <template>
-        <div class="px-5 pb-8">
+        <div class="pl-4 pr-6 pb-8 sm:px-6">
                 <article
-                        class="mx-auto flex w-full max-w-4xl flex-col gap-6 rounded-[36px] border-4 border-black bg-white/85 px-8 py-10 font-sans text-base leading-relaxed text-[#1f1b2c] shadow-[12px_12px_0_#1f1b2c] backdrop-blur sm:text-lg"
+                        class="mx-auto flex w-full max-w-6xl flex-col gap-6 rounded-[36px] border-4 border-black bg-white/80 px-4 py-8 font-sans text-base leading-relaxed text-[#1f1b2c] shadow-[8px_8px_0_#1f1b2c] backdrop-blur sm:px-10 sm:py-10 sm:text-lg sm:shadow-[16px_16px_0_#1f1b2c]"
                 >
                         <div class="flex flex-col gap-3">
                                 <p class="text-sm uppercase tracking-[0.4em] text-[#f15a24]">Origin Story</p>
                                 <h1 class="text-3xl">Why "Now In Singapore"?</h1>
                         </div>
                         <p>As a Singaporean, I've often hear friends lament that,</p>
-                        <p class="ml-4 w-11/12 rounded-2xl border-2 border-dashed border-[#1f1b2c]/40 bg-[#ffe066]/40 px-4 py-3 font-serif text-xl italic">
+                        <p class="mx-auto w-full rounded-2xl border-2 border-dashed border-[#1f1b2c]/40 bg-[#ffe066]/40 px-4 py-3 font-serif text-xl italic sm:mx-0 sm:ml-4 sm:w-11/12">
                                 "There's nothing much to do here."
                         </p>
                         <p>

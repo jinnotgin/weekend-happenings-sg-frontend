@@ -19,7 +19,7 @@ const filteredEvents = computed(() => {
 </script>
 
 <template>
-	<main class="flex flex-col gap-8">
+		<main class="flex flex-col gap-8 pl-4 pr-6 sm:px-0">
 		<div
 			class="mx-auto flex w-full max-w-xl flex-col items-center gap-4 rounded-[32px] border-4 border-dashed border-[#1f1b2c]/40 bg-white/80 px-3 py-7 text-center shadow-[8px_8px_0_#1f1b2c] backdrop-blur sm:px-6 sm:py-12"
 			v-show="events.fetchEventsStatus !== 'success'"
@@ -45,7 +45,7 @@ const filteredEvents = computed(() => {
 			</div>
 			<div
 				v-show="filteredEvents.length === 0"
-				class="mx-auto w-full max-w-6xl rounded-[32px] border-4 border-black bg-white/80 px-4 py-8 text-center font-sans text-base shadow-[16px_16px_0_#1f1b2c] backdrop-blur sm:px-8 sm:py-12 sm:text-lg"
+				class="mx-auto w-full max-w-6xl rounded-[32px] border-4 border-black bg-white/80 px-4 py-8 text-center font-sans text-base shadow-[8px_8px_0_#1f1b2c] backdrop-blur sm:px-8 sm:py-12 sm:text-lg sm:shadow-[16px_16px_0_#1f1b2c]"
 			>
                                 <p>Oh no! 😞 We couldn't find any events for this category and time range.</p>
                                 <p class="mt-4 text-xs uppercase tracking-[0.3em] text-[#f15a24] sm:text-sm">
@@ -58,7 +58,7 @@ const filteredEvents = computed(() => {
                                         :key="index"
                                         class="transition-transform duration-200"
                                 >
-				<div class="group relative overflow-hidden rounded-[32px] border-4 border-black bg-white/85 px-4 py-5 shadow-[12px_12px_0_#1f1b2c] backdrop-blur transition-all duration-200 hover:-translate-y-1 hover:shadow-[16px_16px_0_#f15a24] sm:px-8 sm:py-8">
+				<div class="group relative overflow-hidden rounded-[32px] border-4 border-black bg-white/85 px-4 py-5 shadow-[8px_8px_0_#1f1b2c] backdrop-blur transition-all duration-200 hover:-translate-y-1 hover:shadow-[16px_16px_0_#f15a24] sm:px-8 sm:py-8">
                                                 <div
                                                         class="pointer-events-none absolute -right-16 -top-16 h-56 w-56 rounded-full bg-gradient-to-br from-[#ffe066] via-[#ff8ba7] to-[#8ec5ff] opacity-40 blur-3xl transition-opacity group-hover:opacity-60"
                                                 ></div>

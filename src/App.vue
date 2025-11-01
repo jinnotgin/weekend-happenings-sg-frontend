@@ -37,12 +37,12 @@ const currentYear = new Date().getFullYear();
 </script>
 
 <template>
-		<header class="relative px-4 pt-8 pb-5 sm:px-6 sm:pt-10 sm:pb-6">
+		<header class="relative pl-4 pr-6 pt-8 pb-5 sm:px-6 sm:pt-10 sm:pb-6">
                 <div
                         class="absolute inset-x-3 -top-10 h-48 rounded-[36px] bg-gradient-to-r from-[#ffe066] via-[#ff8ba7] to-[#8ec5ff] opacity-60 blur-3xl"
                 ></div>
 		<div
-			class="relative mx-auto flex w-full max-w-6xl flex-col gap-2 sm:gap-6 rounded-[32px] border-4 border-black bg-white/80 px-3 py-5 shadow-[16px_16px_0_#1f1b2c] backdrop-blur sm:gap-8 sm:px-6 sm:py-8"
+			class="relative mx-auto flex w-full max-w-6xl flex-col gap-2 sm:gap-6 rounded-[32px] border-4 border-black bg-white/80 px-3 py-5 shadow-[8px_8px_0_#1f1b2c] backdrop-blur sm:gap-8 sm:px-6 sm:py-8 sm:shadow-[16px_16px_0_#1f1b2c]"
 		>
 			<div
 				class="grid items-start gap-3 [grid-template-columns:minmax(0,1fr)_auto] sm:flex sm:gap-6 sm:items-start sm:justify-between"
@@ -102,16 +102,16 @@ const currentYear = new Date().getFullYear();
                 </div>
         </header>
 
-	<main class="px-4 pb-8 pt-6 sm:px-5 sm:pb-14 sm:pt-8">
+	<main class="pl-4 pr-6 pb-8 pt-6 sm:px-5 sm:pb-14 sm:pt-8">
                 <RouterView
                         class="mx-auto w-full max-w-6xl"
                         :activeTimeRange="activeTimeRange"
                         :activeCategory="activeCategory"
                 />
         </main>
-	<footer class="px-4 pb-8 sm:px-5 sm:pb-14">
+	<footer class="pl-4 pr-6 pb-8 sm:px-5 sm:pb-14">
 		<div
-			class="mx-auto flex w-full max-w-6xl flex-col items-start justify-between gap-4 rounded-[28px] border-4 border-black bg-white/80 px-5 py-5 font-serif text-base shadow-[16px_16px_0_#1f1b2c] backdrop-blur md:flex-row md:items-center"
+			class="mx-auto flex w-full max-w-6xl flex-col items-start justify-between gap-4 rounded-[28px] border-4 border-black bg-white/80 px-5 py-5 font-serif text-base shadow-[8px_8px_0_#1f1b2c] backdrop-blur sm:shadow-[16px_16px_0_#1f1b2c] md:flex-row md:items-center"
 		>
                         <span class="font-sans text-sm uppercase tracking-[0.3em] text-[#1f1b2c]">
                                 Made by
@@ -122,7 +122,7 @@ const currentYear = new Date().getFullYear();
                                 >
                                         Jin
                                 </a>
-                                · © {{ currentYear }}
+                                · © 2024 - {{ currentYear }}
                         </span>
                         <VMenu placement="top">
                                 <a
