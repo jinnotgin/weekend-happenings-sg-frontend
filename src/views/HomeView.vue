@@ -471,7 +471,7 @@ onBeforeUnmount(() => {
                                                                                 <span
                                                                                         v-for="(category, index) in event.category"
                                                                                         :key="index"
-                                                                                        class="rounded-full border-2 border-[#1f1b2c] bg-white px-3 py-1 font-sans text-xs uppercase tracking-[0.2em] text-[#1f1b2c] shadow-[3px_3px_0_#1f1b2c]"
+                                                                                        class="rounded-full border-2 border-[#1f1b2c] bg-white/80 px-3 py-1 font-sans text-xs uppercase tracking-[0.2em] text-[#1f1b2c]"
                                                                                 >
                                                                                         {{ category }}
                                                                                 </span>
