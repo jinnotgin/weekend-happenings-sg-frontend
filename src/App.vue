@@ -102,7 +102,7 @@ const currentYear = new Date().getFullYear();
                 </div>
         </header>
 
-	<main class="px-4 pb-10 pt-6 sm:px-5 sm:pb-14 sm:pt-8">
+	<main class="px-4 pb-8 pt-6 sm:px-5 sm:pb-14 sm:pt-8">
                 <RouterView
                         class="mx-auto w-full max-w-6xl"
                         :activeTimeRange="activeTimeRange"
