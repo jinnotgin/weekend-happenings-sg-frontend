@@ -37,7 +37,7 @@ const currentYear = new Date().getFullYear();
 </script>
 
 <template>
-		<header class="relative pl-4 pr-6 pt-8 pb-5 sm:px-6 sm:pt-10 sm:pb-6">
+		<header class="relative pl-4 pr-6 pt-8 pb-5 sm:pt-10 sm:pb-6">
                 <div
                         class="absolute inset-x-3 -top-10 h-48 rounded-[36px] bg-gradient-to-r from-[#ffe066] via-[#ff8ba7] to-[#8ec5ff] opacity-60 blur-3xl"
                 ></div>
@@ -102,14 +102,14 @@ const currentYear = new Date().getFullYear();
                 </div>
         </header>
 
-	<main class="pl-4 pr-6 pb-8 pt-6 sm:px-5 sm:pb-14 sm:pt-8">
+	<main class="pl-4 pr-6 pb-8 pt-6 sm:pb-14 sm:pt-8">
                 <RouterView
                         class="mx-auto w-full max-w-6xl"
                         :activeTimeRange="activeTimeRange"
                         :activeCategory="activeCategory"
                 />
         </main>
-	<footer class="pl-4 pr-6 pb-8 sm:px-5 sm:pb-14">
+	<footer class="pl-4 pr-6 pb-8 sm:pb-14">
 		<div
 			class="mx-auto flex w-full max-w-6xl flex-col items-start justify-between gap-4 rounded-[28px] border-4 border-black bg-white/80 px-5 py-5 font-serif text-base shadow-[8px_8px_0_#1f1b2c] backdrop-blur sm:shadow-[16px_16px_0_#1f1b2c] md:flex-row md:items-center"
 		>

@@ -19,7 +19,7 @@ const filteredEvents = computed(() => {
 </script>
 
 <template>
-		<main class="flex flex-col gap-8 pl-4 pr-6 sm:px-0">
+        <main class="flex flex-col gap-8 px-0">
 		<div
 			class="mx-auto flex w-full max-w-xl flex-col items-center gap-4 rounded-[32px] border-4 border-dashed border-[#1f1b2c]/40 bg-white/80 px-3 py-7 text-center shadow-[8px_8px_0_#1f1b2c] backdrop-blur sm:px-6 sm:py-12"
 			v-show="events.fetchEventsStatus !== 'success'"
