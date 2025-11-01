@@ -487,7 +487,7 @@ onBeforeUnmount(() => {
                         </ul>
 				<div
 					v-if="shouldShowNavigator"
-					class="nav-pill sm:hidden fixed bottom-1.5 left-1/2 z-40 flex -translate-x-1/2 items-center gap-2 rounded-full border border-white/20 bg-[#1f1b2c]/80 px-3 py-1.5 text-white backdrop-blur-lg"
+					class="nav-pill sm:hidden fixed select-none bottom-1.5 left-1/2 z-40 flex -translate-x-1/2 items-center gap-2 rounded-full border border-white/20 bg-[#1f1b2c]/80 px-3 py-1.5 text-white backdrop-blur-lg"
 					:style="{ paddingBottom: 'calc(env(safe-area-inset-bottom) + 0.25rem)' }"
 				>
 					<button
