@@ -41,7 +41,7 @@ const filteredEvents = computed(() => {
 		</div>
 		<div v-show="events.fetchEventsStatus === 'success'" class="flex flex-col gap-6 pb-6 lg:gap-8">
 			<div v-if="filteredEvents.length > 0" class="mx-auto max-w-4xl text-center">
-				<p class="font-sans text-sm uppercase tracking-[0.4em] text-[#1f1b2c]/70">
+				<p class="font-sans text-xs sm:text-sm uppercase tracking-[0.4em] text-[#1f1b2c]/70">
 					Information may be imperfect - double check before you head out!
 				</p>
 			</div>
@@ -170,7 +170,7 @@ const filteredEvents = computed(() => {
                                 </li>
                         </ul>
                 <p
-                        class="text-center font-sans text-sm uppercase tracking-[0.3em] text-[#1f1b2c]/70"
+                        class="text-center font-sans text-xs sm:text-sm uppercase tracking-[0.3em] text-[#1f1b2c]/70"
                         v-show="filteredEvents.length > 0"
                 >
                         Events sourced on {{ new Date(events.generationTime).toLocaleString() }}.

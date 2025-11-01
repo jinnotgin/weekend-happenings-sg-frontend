@@ -66,7 +66,7 @@ const currentYear = new Date().getFullYear();
 						<span aria-hidden="true" class="text-3xl sm:text-4xl">🇸🇬</span>
 					</h1>
 					<p class="mt-1 font-sans text-xs uppercase tracking-[0.2em] text-[#f15a24] sm:mt-3 sm:text-base">
-						Fast finds for your next outing.
+						F<span class="hidden sm:inline">ast f</span>inds for your next outing.
 					</p>
 				</RouterLink>
 
