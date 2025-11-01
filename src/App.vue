@@ -1,5 +1,5 @@
 <script setup>
-import { ref, computed } from "vue";
+import { ref, computed, onMounted } from "vue";
 import { RouterLink, RouterView, useRoute } from "vue-router";
 import { useEventsStore } from "@/stores/events.js";
 import DropdownSelector from "@/components/DropdownSelector.vue";
@@ -10,6 +10,14 @@ function isCurrentRoute(path) {
 }
 
 const events = useEventsStore();
+onMounted(() => {
+        if (
+                events.fetchEventsStatus === "idle" ||
+                events.fetchEventsStatus === "error"
+        ) {
+                events.fetchEvents();
+        }
+});
 const timeRangeOptions = {
         thisWeek: "this week",
         thisWeekend: "this weekend",
@@ -37,7 +45,7 @@ const currentYear = new Date().getFullYear();
 </script>
 
 <template>
-		<header class="relative pl-4 pr-6 pt-8 pb-5 sm:pt-10 sm:pb-6">
+		<header class="relative pl-4 pr-6 pt-8 pb-5 sm:pt-10">
                 <div
                         class="absolute inset-x-3 -top-10 h-48 rounded-[36px] bg-gradient-to-r from-[#ffe066] via-[#ff8ba7] to-[#8ec5ff] opacity-60 blur-3xl"
                 ></div>

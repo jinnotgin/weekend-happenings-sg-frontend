@@ -85,14 +85,38 @@ export function getDateRanges(inputDate = new Date()) {
  * If any date in the ranges is null, it returns true, assuming incomplete data to fully evaluate.
  */
 export function checkDateOverlap(withinRange, findRange) {
+	const normalizeRange = (range) => {
+		if (Array.isArray(range)) {
+			return range;
+		}
+		if (range && typeof range === "object") {
+			const start =
+				range.start ?? range.from ?? range.begin ?? range[0] ?? null;
+			const end = range.end ?? range.to ?? range.finish ?? range[1] ?? null;
+			return [start, end];
+		}
+		if (typeof range === "string" && range.trim().length > 0) {
+			return [range, range];
+		}
+		if (range instanceof Date) {
+			return [range, range];
+		}
+		return [null, null];
+	};
+
 	// Function to convert a date string to a Date object
 	const parseDate = (dateStr) => {
-		return dateStr ? new Date(dateStr) : null;
+		if (!dateStr) return null;
+		if (dateStr instanceof Date) {
+			return new Date(dateStr);
+		}
+		const parsed = new Date(dateStr);
+		return Number.isNaN(parsed.getTime()) ? null : parsed;
 	};
 
 	// Convert the date strings in each range to Date objects
-	const [withinStart, withinEnd] = withinRange.map(parseDate);
-	const [findStart, findEnd] = findRange.map(parseDate);
+	const [withinStart, withinEnd] = normalizeRange(withinRange).map(parseDate);
+	const [findStart, findEnd] = normalizeRange(findRange).map(parseDate);
 
 	// If any date is null, return true, as we cannot fully evaluate overlap
 	if (!withinStart || !withinEnd || !findStart || !findEnd) {

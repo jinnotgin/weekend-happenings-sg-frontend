@@ -9,8 +9,10 @@ const props = defineProps({
         activeCategory: String,
 });
 
-events.fetchEvents();
 const filteredEvents = computed(() => {
+        if (!props.activeTimeRange || !props.activeCategory) {
+                return [];
+        }
         return events.getItemsInDateRangeAndCategory(
                 props.activeTimeRange,
                 props.activeCategory
