@@ -94,14 +94,14 @@ const currentYear = new Date().getFullYear();
 			>
 				<span>Explore</span>
 				<DropdownSelector
-					class="text-sm sm:text-xl"
+					class="text-sm sm:text-xl mr-2"
 					:options="categoryOptions"
 					:selectedValue="activeCategory"
 					@update:selectedValue="handleCategoryChange"
 				/>
 				<span>events happening</span>
 				<DropdownSelector
-					class="text-sm sm:text-xl"
+					class="text-sm sm:text-xl mr-2"
 					:options="timeRangeOptions"
 					:selectedValue="activeTimeRange"
 					@update:selectedValue="handleTimeRangeChange"

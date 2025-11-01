@@ -66,20 +66,32 @@ const filteredEvents = computed(() => {
                                                 ></div>
                                                 <div class="relative z-10 flex flex-col-reverse gap-6 lg:flex-row lg:items-start lg:gap-10">
                                                 <div class="flex flex-1 flex-col gap-5">
-                                                        <div class="flex flex-wrap items-center gap-3">
+					<div class="flex items-start gap-3 sm:gap-4">
                                                                 <a
                                                                         :href="event.link"
                                                                         target="_blank"
-                                                                        class="group/link inline-flex items-center gap-2 text-2xl font-bold text-[#1f1b2c] underline-offset-8 transition-colors hover:text-[#f15a24] hover:underline sm:text-3xl"
+                                                                        rel="noopener"
+                                                                        class="min-w-0 flex-1 text-2xl font-bold leading-tight text-[#1f1b2c] underline-offset-8 transition-colors hover:text-[#f15a24] hover:underline sm:text-3xl"
                                                                 >
-                                                                        {{ event.title }}
-                                                                        <vue-feather
-                                                                                type="arrow-up-right"
-                                                                                class="h-5 w-5 text-[#f15a24] transition-transform group-hover/link:translate-x-1 group-hover/link:-translate-y-1"
-                                                                        />
+                                                                        <span class="min-w-0 break-words">{{ event.title }}</span>
                                                                 </a>
-                                                                <VMenu class="hidden sm:inline-block">
-                                                                        <vue-feather type="info" class="h-5 text-[#1f1b2c]" />
+                                                                <div class="ml-auto flex items-start gap-2">
+                                                                        <a
+                                                                                :href="event.link"
+                                                                                target="_blank"
+                                                                                rel="noopener"
+                                                                                aria-label="Open event in a new tab"
+                                                                                class="flex h-9 w-9 items-center justify-center rounded-full border-2 border-[#1f1b2c] bg-white text-[#f15a24] shadow-[4px_4px_0_#1f1b2c] transition-all hover:-translate-y-0.5 hover:shadow-[6px_6px_0_#f15a24]"
+                                                                        >
+                                                                                <vue-feather type="arrow-up-right" class="h-4 w-4" />
+                                                                        </a>
+                                                                        <VMenu class="hidden sm:inline-flex">
+                                                                                <button
+                                                                                        type="button"
+                                                                                        class="flex h-9 w-9 items-center justify-center rounded-full border-2 border-[#1f1b2c] bg-white text-[#1f1b2c] shadow-[4px_4px_0_#1f1b2c] transition-all hover:-translate-y-0.5 hover:shadow-[6px_6px_0_#f15a24]"
+                                                                                >
+                                                                                        <vue-feather type="info" class="h-5 w-5" />
+                                                                                </button>
                                                                         <template #popper>
                                                                                 <div
                                                                                         class="min-w-[200px] rounded-md border-2 border-black bg-[#1f1b2c] px-3 py-3 font-sans text-xs text-white shadow-[4px_4px_0_#f15a24]"
@@ -100,12 +112,13 @@ const filteredEvents = computed(() => {
                                                                                         </a>
                                                                                 </div>
                                                                         </template>
-                                                                </VMenu>
+                                                                        </VMenu>
+                                                                </div>
                                                         </div>
                                                         <p class="font-sans text-base leading-relaxed text-[#1f1b2c] sm:text-lg">
                                                                 {{ event.description }}
                                                         </p>
-					<div class="grid gap-3 sm:grid-cols-3 sm:gap-6">
+					<div class="grid items-start gap-3 sm:grid-cols-3 sm:gap-6">
                                                                 <div class="rounded-2xl border-2 border-dashed border-[#1f1b2c]/40 bg-[#ffe066]/30 px-4 py-3">
                                                                         <p class="font-sans text-xs uppercase tracking-[0.3em] text-[#f15a24]">
                                                                                 Date
