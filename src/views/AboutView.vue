@@ -14,7 +14,7 @@
                         And I get it. Trying to find exciting activities or events can often feel like a tiresome process of googling endlessly and sifting through countless websites. 😢
                 </p>
                 <p>
-                        That's exactly why "Now In Singapore" was created—it's a one-stop starter guide to discovering the pulse of Singapore! 🌟
+                        That's exactly why "Now In Singapore" was created - it's a one-stop starter guide to discovering the pulse of Singapore! 🌟
                 </p>
                 <p>
                         "Now In Singapore" routinely scours the internet to compile a comprehensive list of events happening all over Singapore. From festive celebrations to special happenings, it's all curated and updated for you, dramatically reducing the hassle of finding the perfect outing.
@@ -31,7 +31,7 @@
                                 target="_blank"
                                 class="underline decoration-2 decoration-[#f15a24] underline-offset-4"
                                 >GPT-5 mini</a
-                        >) to better compile, summarise, and categorise information across different websites—so that you don't have to.
+                        >) to better compile, summarise, and categorise information across different websites - so that you don't have to.
                 </p>
                 <div class="h-px w-full bg-gradient-to-r from-transparent via-[#1f1b2c]/40 to-transparent"></div>
                 <div class="flex flex-col gap-3">
