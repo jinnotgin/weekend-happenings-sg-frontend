@@ -75,7 +75,7 @@ const locationOptions = computed(() => {
                 options[region] = region;
         }
 
-        options.nearMe = "your area now";
+        options.nearMe = "your area";
 
         return options;
 });
@@ -86,9 +86,11 @@ const userLocation = ref(null);
  */
 const locationStatus = ref("idle");
 const locationErrorMessage = ref("");
+const canRetryLocation = ref(false);
 
 function handleLocationChange(newValue) {
         locationErrorMessage.value = "";
+        canRetryLocation.value = false;
         if (newValue === "nearMe") {
                 if (!("geolocation" in navigator)) {
                         locationStatus.value = "unsupported";
@@ -114,12 +116,13 @@ function handleLocationChange(newValue) {
                         },
                         (error) => {
                                 locationStatus.value = "error";
+                                canRetryLocation.value = true;
                                 if (error.code === error.PERMISSION_DENIED) {
                                         locationErrorMessage.value =
-                                                "We couldn't access your location. Showing all events instead.";
+                                                "Location permission denied. Showing Singapore events instead.";
                                 } else {
                                         locationErrorMessage.value =
-                                                "We couldn't fetch your location right now. Showing all events instead.";
+                                                "We couldn't fetch your location right now. Showing Singapore events instead.";
                                 }
                                 activeLocation.value = "anywhere";
                                 userLocation.value = null;
@@ -138,6 +141,10 @@ function handleLocationChange(newValue) {
         locationStatus.value = "idle";
         activeLocation.value = newValue;
         events.triggerFakeLoading();
+}
+
+function retryLocationRequest() {
+        handleLocationChange("nearMe");
 }
 
 const currentYear = new Date().getFullYear();
@@ -219,12 +226,20 @@ const currentYear = new Date().getFullYear();
 			>
 				Fetching events near you…
 			</p>
-			<p
+			<div
 				v-else-if="locationErrorMessage"
-				class="mt-1 font-sans text-[11px] uppercase tracking-[0.25em] text-[#f15a24] sm:text-xs"
+				class="mt-1 flex flex-wrap items-center gap-2 font-sans text-[11px] uppercase tracking-[0.25em] text-[#f15a24] sm:text-xs"
 			>
-				{{ locationErrorMessage }}
-			</p>
+				<span>{{ locationErrorMessage }}</span>
+				<button
+					v-if="canRetryLocation"
+					type="button"
+					class="rounded-full border border-[#f15a24] px-2 py-1 font-semibold tracking-[0.2em] text-[#f15a24] transition-colors hover:bg-[#f15a24] hover:text-white sm:px-3"
+					@click="retryLocationRequest"
+				>
+					Try again
+				</button>
+			</div>
                 </div>
         </header>
 
