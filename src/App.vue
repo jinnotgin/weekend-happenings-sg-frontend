@@ -59,8 +59,8 @@ const currentYear = new Date().getFullYear();
 					<h1
 						class="flex items-center gap-2 text-3xl font-bold leading-tight text-[#1f1b2c] sm:gap-3 sm:text-5xl md:text-6xl"
 					>
-						<span class="flex items-center gap-2">
-							<span>Now in</span>
+						<span>
+							<span>Now in </span>
 							<span class="hidden sm:inline">Singapore</span>
 						</span>
 						<span aria-hidden="true" class="text-3xl sm:text-4xl">🇸🇬</span>
