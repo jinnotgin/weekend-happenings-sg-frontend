@@ -387,8 +387,8 @@ onBeforeUnmount(() => {
                                         :data-event-index="index"
                                 >
 				<div
-					class="group relative bg-white/80 overflow-hidden rounded-[32px] border-4 border-black bg-white/85 px-4 py-5 shadow-[8px_8px_0_#1f1b2c] backdrop-blur transition-all duration-200 sm:px-8 sm:py-8 md:hover:-translate-y-1 md:hover:shadow-[16px_16px_0_#f15a24]"
-				>
+					class="group relative bg-white/80 overflow-hidden rounded-[32px] border-4 border-black bg-white/85 px-4 py-5 shadow-[8px_8px_0_#1f1b2c] backdrop-blur transition-all duration-200 sm:px-8 sm:py-8 lg:hover:-translate-y-1 lg:hover:shadow-[16px_16px_0_#f15a24]"
+			>
                                                 <div
                                                         class="pointer-events-none absolute -right-16 -top-16 h-56 w-56 rounded-full bg-gradient-to-br from-[#ffe066] via-[#ff8ba7] to-[#8ec5ff] opacity-40 blur-3xl transition-opacity group-hover:opacity-60"
                                                 ></div>
