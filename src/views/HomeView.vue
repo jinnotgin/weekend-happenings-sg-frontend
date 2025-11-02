@@ -11,6 +11,7 @@ import { useEventsStore } from "@/stores/events.js";
 import { calculateDistanceKm } from "@/utils.js";
 import VueFeather from "vue-feather";
 import CurvedLoop from "@/components/CurvedLoop.vue";
+import NavigationPill from "@/components/NavigationPill.vue";
 
 const events = useEventsStore();
 const props = defineProps({
@@ -908,59 +909,18 @@ onBeforeUnmount(() => {
                                         </div>
                                 </li>
                         </ul>
-				<div
+				<NavigationPill
 					v-if="shouldShowNavigator"
-					:class="[
-						'nav-pill lg:hidden fixed select-none bottom-0.5 left-1/2 z-40 flex -translate-x-1/2 items-center gap-2 rounded-full border border-white/20 bg-[#1f1b2c]/80 px-3 py-1.5 text-white backdrop-blur-lg',
-						{
-							'nav-pill--bounce-up': bounceState === 'up',
-							'nav-pill--bounce-down': bounceState === 'down',
-						},
-					]"
-					:style="{ paddingBottom: 'calc(env(safe-area-inset-bottom) + 0.25rem)' }"
-				>
-					<button
-						type="button"
-						class="nav-pill__button flex h-8 w-8 items-center justify-center rounded-full border border-white/30 bg-white/90 text-[#1f1b2c]"
-						:class="{
-							'is-pressed': pressedDirection === 'up',
-							'is-hold': holdEffectDirection === 'up',
-						}"
-						@click="handleNavigatorClick('up')"
-						@mousedown.prevent="handlePressStart('up')"
-						@touchstart="handlePressStart('up')"
-						@mouseup.prevent="handlePressEnd"
-						@mouseleave="handlePressCancel"
-						@touchend="handlePressEnd"
-						@touchcancel="handlePressCancel"
-						:aria-pressed="pressedDirection === 'up'"
-						aria-label="Scroll to previous event"
-					>
-						<vue-feather type="chevron-up" class="h-5 w-5" />
-					</button>
-					<span class="nav-pill__count font-sans text-[10px] font-semibold uppercase tracking-[0.45em] text-white">
-						{{ currentDisplayIndex }} / {{ totalEvents }}
-					</span>
-					<button
-						type="button"
-						class="nav-pill__button flex h-8 w-8 items-center justify-center rounded-full border border-white/30 bg-white/90 text-[#1f1b2c]"
-						:class="{
-							'is-pressed': pressedDirection === 'down',
-							'is-hold': holdEffectDirection === 'down',
-						}"
-						@click="handleNavigatorClick('down')"
-						@mousedown.prevent="handlePressStart('down')"
-						@touchstart="handlePressStart('down')"
-						@mouseup.prevent="handlePressEnd"
-						@mouseleave="handlePressCancel"
-						@touchend="handlePressEnd"
-						@touchcancel="handlePressCancel"
-						:aria-pressed="pressedDirection === 'down'"
-						aria-label="Scroll to next event"
-					>
-						<vue-feather type="chevron-down" class="h-5 w-5" />
-					</button>
-				</div>
+					:bounce-state="bounceState"
+					:pressed-direction="pressedDirection"
+					:hold-effect-direction="holdEffectDirection"
+					:current-display-index="currentDisplayIndex"
+					:total-events="totalEvents"
+					@navigator-click="handleNavigatorClick"
+					@press-start="handlePressStart"
+					@press-end="handlePressEnd"
+					@press-cancel="handlePressCancel"
+				/>
                 <p
                         class="text-center font-sans text-xs sm:text-sm uppercase tracking-[0.3em] text-[#1f1b2c]/70"
                         v-show="filteredEvents.length > 0"
@@ -970,96 +930,3 @@ onBeforeUnmount(() => {
         </div>
         </main>
 </template>
-
-<style scoped>
-.nav-pill {
-        transition: transform 0.2s ease, box-shadow 0.2s ease;
-}
-
-.nav-pill--bounce-up {
-        animation: navBounceUp 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
-        animation-fill-mode: both;
-}
-
-.nav-pill--bounce-down {
-        animation: navBounceDown 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
-        animation-fill-mode: both;
-}
-
-@keyframes navBounceUp {
-        0% {
-                transform: translate(-50%, 0) scale(1);
-        }
-        38% {
-                transform: translate(-50%, -14px) scale(1.04);
-        }
-        65% {
-                transform: translate(-50%, 6px) scale(0.98);
-        }
-        100% {
-                transform: translate(-50%, 0) scale(1);
-        }
-}
-
-@keyframes navBounceDown {
-        0% {
-                transform: translate(-50%, 0) scale(1);
-        }
-        38% {
-                transform: translate(-50%, 14px) scale(1.04);
-        }
-        65% {
-                transform: translate(-50%, -6px) scale(0.98);
-        }
-        100% {
-                transform: translate(-50%, 0) scale(1);
-        }
-}
-
-.nav-pill__button {
-        transition: transform 0.15s ease, box-shadow 0.15s ease,
-                background-color 0.15s ease;
-        box-shadow: 0 0 0 0 rgba(255, 255, 255, 0);
-}
-
-.nav-pill__button:focus-visible {
-        outline: none;
-        box-shadow: 0 0 0 3px rgba(241, 90, 36, 0.5);
-}
-
-.nav-pill__button.is-pressed:not(.is-hold) {
-        transform: translateY(1px) scale(0.94);
-        box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.35);
-        background-color: rgba(255, 255, 255, 1);
-}
-
-.nav-pill__button.is-hold {
-        animation: navHoldPulse 0.7s ease-out;
-        box-shadow: 0 0 0 0 rgba(241, 90, 36, 0.45);
-        background-color: rgba(255, 255, 255, 1);
-}
-
-@keyframes navHoldPulse {
-        0% {
-                box-shadow: 0 0 0 0 rgba(241, 90, 36, 0.05);
-                transform: scale(0.96);
-        }
-        45% {
-                box-shadow: 0 0 0 10px rgba(241, 90, 36, 0.3);
-                transform: scale(1.05);
-        }
-        100% {
-                box-shadow: 0 0 0 0 rgba(241, 90, 36, 0);
-                transform: scale(1);
-        }
-}
-
-.nav-pill__count {
-        min-width: 4.25rem;
-        display: inline-flex;
-        justify-content: center;
-        text-align: center;
-        font-variant-numeric: tabular-nums;
-        line-height: 1;
-}
-</style>

@@ -218,7 +218,8 @@ const currentYear = new Date().getFullYear();
 					:options="locationOptions"
 					:selectedValue="activeLocation"
 					@update:selectedValue="handleLocationChange"
-				/>!
+				/>
+                                <span class="hidden sm:inline">!</span>
                         </h3>
 			<p
 				v-if="locationStatus === 'locating'"
