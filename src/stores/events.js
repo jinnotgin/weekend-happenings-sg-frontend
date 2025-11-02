@@ -12,6 +12,7 @@ export const useEventsStore = defineStore("events", {
 	state: () => ({
 		items: [],
 		categories: [],
+		regions: [],
 		sources: [],
 		generationTime: null,
 		/** @type {'idle' | 'fetching' | 'success', 'error'} */
@@ -57,6 +58,7 @@ export const useEventsStore = defineStore("events", {
 				const eventsData = await eventsResponse.json();
 
 				const allCategories = new Set();
+				const allRegions = new Set();
 				this.items = eventsData.map((item) => {
 					for (let categoryName of item.category) {
 						allCategories.add(categoryName);
@@ -66,6 +68,12 @@ export const useEventsStore = defineStore("events", {
 						? item.locations.filter(Boolean)
 						: [];
 					item.locations = normalizedLocations;
+					for (let location of normalizedLocations) {
+						const regionName = location?.approximate_region;
+						if (regionName) {
+							allRegions.add(regionName);
+						}
+					}
 					if (!item.location) {
 						const primaryLocation = normalizedLocations[0];
 						item.location =
@@ -81,6 +89,7 @@ export const useEventsStore = defineStore("events", {
 					return item;
 				});
 				this.categories = Array.from(allCategories);
+				this.regions = Array.from(allRegions);
 
 				// get sources
 				const sourcesUrl = `${DATA_URL}/sources.json?${timestamp}`;

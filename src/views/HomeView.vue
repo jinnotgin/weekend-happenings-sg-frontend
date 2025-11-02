@@ -8,6 +8,7 @@ import {
         watch,
 } from "vue";
 import { useEventsStore } from "@/stores/events.js";
+import { calculateDistanceKm } from "@/utils.js";
 import VueFeather from "vue-feather";
 import CurvedLoop from "@/components/CurvedLoop.vue";
 
@@ -15,7 +16,34 @@ const events = useEventsStore();
 const props = defineProps({
         activeTimeRange: String,
         activeCategory: String,
+        activeLocation: String,
+        userLocation: Object,
+        locationStatus: String,
 });
+
+const NEAR_ME_RADIUS_KM = 10;
+
+const extractCoordinates = (coords) => {
+        if (!coords || typeof coords !== "object") {
+                return null;
+        }
+        const lat =
+                typeof coords.lat === "number"
+                        ? coords.lat
+                        : typeof coords.latitude === "number"
+                        ? coords.latitude
+                        : null;
+        const lng =
+                typeof coords.lng === "number"
+                        ? coords.lng
+                        : typeof coords.longitude === "number"
+                        ? coords.longitude
+                        : null;
+        if (lat === null || lng === null) {
+                return null;
+        }
+        return { lat, lng };
+};
 
 const createLocationSummary = (event) => {
         const locationsArray = Array.isArray(event.locations)
@@ -76,14 +104,65 @@ const createLocationSummary = (event) => {
 };
 
 const filteredEvents = computed(() => {
-        if (!props.activeTimeRange || !props.activeCategory) {
+        if (
+                !props.activeTimeRange ||
+                !props.activeCategory ||
+                !props.activeLocation
+        ) {
                 return [];
         }
+
+        const matchesLocation = (event) => {
+                if (!props.activeLocation || props.activeLocation === "anywhere") {
+                        return true;
+                }
+
+                if (props.activeLocation === "nearMe") {
+                        if (props.locationStatus !== "ready" || !props.userLocation) {
+                                return false;
+                        }
+                        const userCoords = extractCoordinates(props.userLocation);
+                        if (!userCoords) {
+                                return false;
+                        }
+                        const eventLocations = Array.isArray(event.locations)
+                                ? event.locations
+                                : [];
+                        return eventLocations.some((location) => {
+                                const coords = extractCoordinates(
+                                        location?.approximate_gps
+                                );
+                                if (!coords) {
+                                        return false;
+                                }
+                                const distance = calculateDistanceKm(
+                                        userCoords,
+                                        coords
+                                );
+                                return distance <= NEAR_ME_RADIUS_KM;
+                        });
+                }
+
+                const targetRegion = props.activeLocation.trim().toLowerCase();
+                if (!targetRegion) {
+                        return true;
+                }
+                const regions = (Array.isArray(event.locations)
+                        ? event.locations
+                        : []
+                )
+                        .map((location) => location?.approximate_region)
+                        .filter(Boolean)
+                        .map((region) => region.trim().toLowerCase());
+                return regions.includes(targetRegion);
+        };
+
         return events
                 .getItemsInDateRangeAndCategory(
                         props.activeTimeRange,
                         props.activeCategory
                 )
+                .filter((event) => matchesLocation(event))
                 .map((event) => ({
                         ...event,
                         locationSummary: createLocationSummary(event),
@@ -132,6 +211,20 @@ const currentDisplayIndex = computed(() => {
         }
         const index = activeEventIndex.value ?? 0;
         return Math.min(index + 1, totalEvents.value);
+});
+
+const isAwaitingLocationResults = computed(() => {
+        return (
+                props.activeLocation === "nearMe" &&
+                props.locationStatus === "locating"
+        );
+});
+
+const shouldShowEmptyState = computed(() => {
+        if (isAwaitingLocationResults.value) {
+                return false;
+        }
+        return filteredEvents.value.length === 0;
 });
 
 watch(totalEvents, (newTotal) => {
@@ -449,10 +542,18 @@ onBeforeUnmount(() => {
 				</p>
 			</div>
 			<div
-				v-show="filteredEvents.length === 0"
+				v-if="isAwaitingLocationResults"
 				class="mx-auto w-full max-w-6xl rounded-[32px] border-4 border-black bg-white/80 px-4 py-8 text-center font-sans text-sm shadow-[8px_8px_0_#1f1b2c] backdrop-blur sm:px-8 sm:py-12 sm:text-lg sm:shadow-[16px_16px_0_#1f1b2c]"
 			>
-                                <p>Oh no! 😞 We couldn't find any events for this category / time period.</p>
+                                <p class="font-sans text-sm text-[#1f1b2c] sm:text-base">
+                                        Finding events near you…
+                                </p>
+                        </div>
+			<div
+				v-show="shouldShowEmptyState"
+				class="mx-auto w-full max-w-6xl rounded-[32px] border-4 border-black bg-white/80 px-4 py-8 text-center font-sans text-sm shadow-[8px_8px_0_#1f1b2c] backdrop-blur sm:px-8 sm:py-12 sm:text-lg sm:shadow-[16px_16px_0_#1f1b2c]"
+			>
+                                <p>Oh no! 😞 We couldn't find any events for this category / time period / area.</p>
                                 <p class="mt-4 text-xs uppercase tracking-[0.3em] text-[#f15a24] sm:text-sm">
                                         Try adjusting your filters for more results!
                                 </p>

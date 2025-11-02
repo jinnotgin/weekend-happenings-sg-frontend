@@ -152,3 +152,41 @@ export function getCheckpointTimestamp() {
 	let timestamp = lastDay.getTime(); // Return Unix timestamp
 	return `${timestamp}`;
 }
+
+export function calculateDistanceKm(pointA, pointB) {
+	if (!pointA || !pointB) {
+		return Number.POSITIVE_INFINITY;
+	}
+
+	const lat1 = Number(pointA.lat ?? pointA.latitude);
+	const lon1 = Number(
+		pointA.lng ?? pointA.lon ?? pointA.longitude ?? pointA.long
+	);
+	const lat2 = Number(pointB.lat ?? pointB.latitude);
+	const lon2 = Number(
+		pointB.lng ?? pointB.lon ?? pointB.longitude ?? pointB.long
+	);
+
+	if (
+		Number.isNaN(lat1) ||
+		Number.isNaN(lon1) ||
+		Number.isNaN(lat2) ||
+		Number.isNaN(lon2)
+	) {
+		return Number.POSITIVE_INFINITY;
+	}
+
+	const toRadians = (degrees) => (degrees * Math.PI) / 180;
+	const R = 6371; // Earth's radius in km
+	const dLat = toRadians(lat2 - lat1);
+	const dLon = toRadians(lon2 - lon1);
+	const a =
+		Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+		Math.cos(toRadians(lat1)) *
+			Math.cos(toRadians(lat2)) *
+			Math.sin(dLon / 2) *
+			Math.sin(dLon / 2);
+	const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+
+	return R * c;
+}

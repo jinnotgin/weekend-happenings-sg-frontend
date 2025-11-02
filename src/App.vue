@@ -41,6 +41,105 @@ function handleCategoryChange(newValue) {
         activeCategory.value = newValue;
 }
 
+const preferredRegionOrder = [
+        "Central",
+        "East",
+        "North-East",
+        "North",
+        "West",
+        "Islands & Offshore",
+];
+const locationOptions = computed(() => {
+        const options = {
+                anywhere: "Singapore",
+        };
+        const regions = Array.isArray(events.regions) ? events.regions : [];
+        const normalizedRegions = new Map(
+                regions.map((region) => [region.toLowerCase(), region])
+        );
+
+        const orderedRegions = [];
+        for (const regionName of preferredRegionOrder) {
+                const match = normalizedRegions.get(regionName.toLowerCase());
+                if (match) {
+                        orderedRegions.push(match);
+                        normalizedRegions.delete(regionName.toLowerCase());
+                }
+        }
+
+        const remainingRegions = Array.from(normalizedRegions.values()).sort(
+                (a, b) => a.localeCompare(b, undefined, { sensitivity: "base" })
+        );
+
+        for (const region of [...orderedRegions, ...remainingRegions]) {
+                options[region] = region;
+        }
+
+        options.nearMe = "your area now";
+
+        return options;
+});
+const activeLocation = ref("anywhere");
+const userLocation = ref(null);
+/**
+ * @type {import('vue').Ref<'idle' | 'locating' | 'ready' | 'error' | 'unsupported'>}
+ */
+const locationStatus = ref("idle");
+const locationErrorMessage = ref("");
+
+function handleLocationChange(newValue) {
+        locationErrorMessage.value = "";
+        if (newValue === "nearMe") {
+                if (!("geolocation" in navigator)) {
+                        locationStatus.value = "unsupported";
+                        locationErrorMessage.value =
+                                "Location access isn't supported on this device. Showing all events instead.";
+                        activeLocation.value = "anywhere";
+                        events.triggerFakeLoading();
+                        return;
+                }
+
+                activeLocation.value = "nearMe";
+                locationStatus.value = "locating";
+                events.triggerFakeLoading();
+
+                navigator.geolocation.getCurrentPosition(
+                        (position) => {
+                                userLocation.value = {
+                                        lat: position.coords.latitude,
+                                        lng: position.coords.longitude,
+                                };
+                                locationStatus.value = "ready";
+                                events.triggerFakeLoading();
+                        },
+                        (error) => {
+                                locationStatus.value = "error";
+                                if (error.code === error.PERMISSION_DENIED) {
+                                        locationErrorMessage.value =
+                                                "We couldn't access your location. Showing all events instead.";
+                                } else {
+                                        locationErrorMessage.value =
+                                                "We couldn't fetch your location right now. Showing all events instead.";
+                                }
+                                activeLocation.value = "anywhere";
+                                userLocation.value = null;
+                                events.triggerFakeLoading();
+                        },
+                        {
+                                enableHighAccuracy: false,
+                                timeout: 10000,
+                                maximumAge: 300000,
+                        }
+                );
+                return;
+        }
+
+        userLocation.value = null;
+        locationStatus.value = "idle";
+        activeLocation.value = newValue;
+        events.triggerFakeLoading();
+}
+
 const currentYear = new Date().getFullYear();
 </script>
 
@@ -99,14 +198,33 @@ const currentYear = new Date().getFullYear();
 					:selectedValue="activeCategory"
 					@update:selectedValue="handleCategoryChange"
 				/>
-				<span>events happening</span>
+				<span>events</span>
 				<DropdownSelector
 					class="text-xs sm:text-lg md:text-xl mr-1 sm:mr-2"
 					:options="timeRangeOptions"
 					:selectedValue="activeTimeRange"
 					@update:selectedValue="handleTimeRangeChange"
-                                />!
+				/>
+				<span>in</span>
+				<DropdownSelector
+					class="text-xs sm:text-lg md:text-xl mr-1 sm:mr-2"
+					:options="locationOptions"
+					:selectedValue="activeLocation"
+					@update:selectedValue="handleLocationChange"
+				/>!
                         </h3>
+			<p
+				v-if="locationStatus === 'locating'"
+				class="mt-1 font-sans text-[11px] uppercase tracking-[0.25em] text-[#1f1b2c]/70 sm:text-xs"
+			>
+				Fetching events near you…
+			</p>
+			<p
+				v-else-if="locationErrorMessage"
+				class="mt-1 font-sans text-[11px] uppercase tracking-[0.25em] text-[#f15a24] sm:text-xs"
+			>
+				{{ locationErrorMessage }}
+			</p>
                 </div>
         </header>
 
@@ -115,6 +233,9 @@ const currentYear = new Date().getFullYear();
                         class="mx-auto w-full max-w-6xl"
                         :activeTimeRange="activeTimeRange"
                         :activeCategory="activeCategory"
+			:activeLocation="activeLocation"
+			:userLocation="userLocation"
+			:locationStatus="locationStatus"
                 />
         </main>
 	<footer class="pl-4 pr-6 pb-24 lg:pb-14">
