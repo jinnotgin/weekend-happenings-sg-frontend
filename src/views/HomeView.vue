@@ -22,6 +22,18 @@ const props = defineProps({
 });
 
 const NEAR_ME_RADIUS_KM = 10;
+const SCROLL_EDGE_THRESHOLD_PX = 160; // Distance (px) from page edges to trigger snap-to-first/last events
+const bounceDurationMs = 600;
+const HOLD_EFFECT_DURATION_MS = 720;
+
+const bounceState = ref(null);
+const pressedDirection = ref(null);
+const holdEffectDirection = ref(null);
+
+let bounceTimeoutId = null;
+let holdEffectTimeoutId = null;
+// Prevents repeatedly snapping to the last event when the user is already at the bottom edge.
+let hasBottomEdgeSnap = false;
 
 const extractCoordinates = (coords) => {
         if (!coords || typeof coords !== "object") {
@@ -103,8 +115,6 @@ const createLocationSummary = (event) => {
         };
 };
 
-const SCROLL_EDGE_THRESHOLD_PX = 200; // Distance (px) from page edges to trigger snap-to-first/last events
-
 const getScrollingElement = () => {
         if (typeof document === "undefined") {
                 return null;
@@ -144,6 +154,34 @@ const isNearBottomEdge = () => {
                 scrollTop -
                 window.innerHeight;
         return remainingDistance <= SCROLL_EDGE_THRESHOLD_PX;
+};
+
+const triggerBounce = (direction) => {
+        if (typeof window === "undefined") {
+                return;
+        }
+        bounceState.value = direction;
+        if (bounceTimeoutId) {
+                window.clearTimeout(bounceTimeoutId);
+        }
+        bounceTimeoutId = window.setTimeout(() => {
+                bounceState.value = null;
+                bounceTimeoutId = null;
+        }, bounceDurationMs);
+};
+
+const triggerHoldEffect = (direction) => {
+        if (typeof window === "undefined") {
+                return;
+        }
+        holdEffectDirection.value = direction;
+        if (holdEffectTimeoutId) {
+                window.clearTimeout(holdEffectTimeoutId);
+        }
+        holdEffectTimeoutId = window.setTimeout(() => {
+                holdEffectDirection.value = null;
+                holdEffectTimeoutId = null;
+        }, HOLD_EFFECT_DURATION_MS);
 };
 
 const filteredEvents = computed(() => {
@@ -412,6 +450,12 @@ const handleNavigate = (direction) => {
                 return;
         }
 
+        const nearBottom = isNearBottomEdge();
+
+        if (!nearBottom) {
+                hasBottomEdgeSnap = false;
+        }
+
         if (direction === "down") {
                 if (isNearTopEdge()) {
                         activeEventIndex.value = 0;
@@ -419,10 +463,12 @@ const handleNavigate = (direction) => {
                         return;
                 }
 
-                if (isNearBottomEdge()) {
-                        const lastIndex = totalEvents.value - 1;
+                if (nearBottom) {
+                        const lastIndex = totalEvents.value ? totalEvents.value - 1 : 0;
                         activeEventIndex.value = lastIndex;
-                        scrollToEvent(lastIndex);
+                        triggerBounce("down");
+                        scrollToPageBoundary("down");
+                        hasBottomEdgeSnap = false;
                         return;
                 }
         }
@@ -434,8 +480,18 @@ const handleNavigate = (direction) => {
                 activeEventIndex.value ?? Math.min(fallbackIndex, totalEvents.value - 1);
 
         if (direction === "up") {
+                const lastIndex = totalEvents.value ? totalEvents.value - 1 : 0;
+                if (nearBottom && !hasBottomEdgeSnap) {
+                        hasBottomEdgeSnap = true;
+                        activeEventIndex.value = lastIndex;
+                        triggerBounce("up");
+                        scrollToEvent(lastIndex);
+                        return;
+                }
+
                 if (currentIndex <= 0) {
                         activeEventIndex.value = 0;
+                        triggerBounce("up");
                         scrollToPageBoundary("up");
                         return;
                 }
@@ -446,7 +502,9 @@ const handleNavigate = (direction) => {
         if (currentIndex >= totalEvents.value - 1) {
                 const lastIndex = totalEvents.value - 1;
                 activeEventIndex.value = lastIndex;
-                scrollToEvent(lastIndex);
+                triggerBounce("down");
+                scrollToPageBoundary("down");
+                hasBottomEdgeSnap = false;
                 return;
         }
         scrollToEvent(currentIndex + 1);
@@ -475,6 +533,7 @@ const startHold = (direction) => {
                         holdFired = false;
                         holdIgnoreTimeoutId = null;
                 }, 350);
+                triggerHoldEffect(direction);
                 if (direction === "up") {
                         activeEventIndex.value = 0;
                         scrollToPageBoundary("up");
@@ -496,6 +555,21 @@ const stopHold = () => {
                 clearTimeout(holdTimeoutId);
                 holdTimeoutId = null;
         }
+};
+
+const handlePressStart = (direction) => {
+        pressedDirection.value = direction;
+        startHold(direction);
+};
+
+const handlePressEnd = () => {
+        pressedDirection.value = null;
+        stopHold();
+};
+
+const handlePressCancel = () => {
+        pressedDirection.value = null;
+        stopHold();
 };
 
 const handleNavigatorClick = (direction) => {
@@ -553,6 +627,18 @@ onBeforeUnmount(() => {
         }
         stopHold();
         resetHoldFired();
+        pressedDirection.value = null;
+        bounceState.value = null;
+        if (bounceTimeoutId) {
+                window.clearTimeout(bounceTimeoutId);
+                bounceTimeoutId = null;
+        }
+        holdEffectDirection.value = null;
+        if (holdEffectTimeoutId) {
+                window.clearTimeout(holdEffectTimeoutId);
+                holdEffectTimeoutId = null;
+        }
+        hasBottomEdgeSnap = false;
 });
 </script>
 
@@ -824,36 +910,52 @@ onBeforeUnmount(() => {
                         </ul>
 				<div
 					v-if="shouldShowNavigator"
-					class="nav-pill lg:hidden fixed select-none bottom-0.5 left-1/2 z-40 flex -translate-x-1/2 items-center gap-2 rounded-full border border-white/20 bg-[#1f1b2c]/80 px-3 py-1.5 text-white backdrop-blur-lg"
+					:class="[
+						'nav-pill lg:hidden fixed select-none bottom-0.5 left-1/2 z-40 flex -translate-x-1/2 items-center gap-2 rounded-full border border-white/20 bg-[#1f1b2c]/80 px-3 py-1.5 text-white backdrop-blur-lg',
+						{
+							'nav-pill--bounce-up': bounceState === 'up',
+							'nav-pill--bounce-down': bounceState === 'down',
+						},
+					]"
 					:style="{ paddingBottom: 'calc(env(safe-area-inset-bottom) + 0.25rem)' }"
 				>
 					<button
 						type="button"
-						class="flex h-8 w-8 items-center justify-center rounded-full border border-white/30 bg-white/90 text-[#1f1b2c] transition-transform active:translate-y-0.5 active:scale-95"
+						class="nav-pill__button flex h-8 w-8 items-center justify-center rounded-full border border-white/30 bg-white/90 text-[#1f1b2c]"
+						:class="{
+							'is-pressed': pressedDirection === 'up',
+							'is-hold': holdEffectDirection === 'up',
+						}"
 						@click="handleNavigatorClick('up')"
-						@mousedown.prevent="startHold('up')"
-						@touchstart="startHold('up')"
-						@mouseup.prevent="stopHold"
-						@mouseleave="stopHold"
-						@touchend="stopHold"
-						@touchcancel="stopHold"
+						@mousedown.prevent="handlePressStart('up')"
+						@touchstart="handlePressStart('up')"
+						@mouseup.prevent="handlePressEnd"
+						@mouseleave="handlePressCancel"
+						@touchend="handlePressEnd"
+						@touchcancel="handlePressCancel"
+						:aria-pressed="pressedDirection === 'up'"
 						aria-label="Scroll to previous event"
 					>
 						<vue-feather type="chevron-up" class="h-5 w-5" />
 					</button>
-					<span class="font-sans text-[10px] uppercase tracking-[0.45em] text-white">
+					<span class="nav-pill__count font-sans text-[10px] font-semibold uppercase tracking-[0.45em] text-white">
 						{{ currentDisplayIndex }} / {{ totalEvents }}
 					</span>
 					<button
 						type="button"
-						class="flex h-8 w-8 items-center justify-center rounded-full border border-white/30 bg-white/90 text-[#1f1b2c] transition-transform active:translate-y-0.5 active:scale-95"
+						class="nav-pill__button flex h-8 w-8 items-center justify-center rounded-full border border-white/30 bg-white/90 text-[#1f1b2c]"
+						:class="{
+							'is-pressed': pressedDirection === 'down',
+							'is-hold': holdEffectDirection === 'down',
+						}"
 						@click="handleNavigatorClick('down')"
-						@mousedown.prevent="startHold('down')"
-						@touchstart="startHold('down')"
-						@mouseup.prevent="stopHold"
-						@mouseleave="stopHold"
-						@touchend="stopHold"
-						@touchcancel="stopHold"
+						@mousedown.prevent="handlePressStart('down')"
+						@touchstart="handlePressStart('down')"
+						@mouseup.prevent="handlePressEnd"
+						@mouseleave="handlePressCancel"
+						@touchend="handlePressEnd"
+						@touchcancel="handlePressCancel"
+						:aria-pressed="pressedDirection === 'down'"
 						aria-label="Scroll to next event"
 					>
 						<vue-feather type="chevron-down" class="h-5 w-5" />
@@ -872,5 +974,92 @@ onBeforeUnmount(() => {
 <style scoped>
 .nav-pill {
         transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.nav-pill--bounce-up {
+        animation: navBounceUp 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+        animation-fill-mode: both;
+}
+
+.nav-pill--bounce-down {
+        animation: navBounceDown 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+        animation-fill-mode: both;
+}
+
+@keyframes navBounceUp {
+        0% {
+                transform: translate(-50%, 0) scale(1);
+        }
+        38% {
+                transform: translate(-50%, -14px) scale(1.04);
+        }
+        65% {
+                transform: translate(-50%, 6px) scale(0.98);
+        }
+        100% {
+                transform: translate(-50%, 0) scale(1);
+        }
+}
+
+@keyframes navBounceDown {
+        0% {
+                transform: translate(-50%, 0) scale(1);
+        }
+        38% {
+                transform: translate(-50%, 14px) scale(1.04);
+        }
+        65% {
+                transform: translate(-50%, -6px) scale(0.98);
+        }
+        100% {
+                transform: translate(-50%, 0) scale(1);
+        }
+}
+
+.nav-pill__button {
+        transition: transform 0.15s ease, box-shadow 0.15s ease,
+                background-color 0.15s ease;
+        box-shadow: 0 0 0 0 rgba(255, 255, 255, 0);
+}
+
+.nav-pill__button:focus-visible {
+        outline: none;
+        box-shadow: 0 0 0 3px rgba(241, 90, 36, 0.5);
+}
+
+.nav-pill__button.is-pressed:not(.is-hold) {
+        transform: translateY(1px) scale(0.94);
+        box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.35);
+        background-color: rgba(255, 255, 255, 1);
+}
+
+.nav-pill__button.is-hold {
+        animation: navHoldPulse 0.7s ease-out;
+        box-shadow: 0 0 0 0 rgba(241, 90, 36, 0.45);
+        background-color: rgba(255, 255, 255, 1);
+}
+
+@keyframes navHoldPulse {
+        0% {
+                box-shadow: 0 0 0 0 rgba(241, 90, 36, 0.05);
+                transform: scale(0.96);
+        }
+        45% {
+                box-shadow: 0 0 0 10px rgba(241, 90, 36, 0.3);
+                transform: scale(1.05);
+        }
+        100% {
+                box-shadow: 0 0 0 0 rgba(241, 90, 36, 0);
+                transform: scale(1);
+        }
+}
+
+.nav-pill__count {
+        min-width: 4.25rem;
+        display: inline-flex;
+        justify-content: center;
+        text-align: center;
+        font-variant-numeric: tabular-nums;
+        line-height: 1;
 }
 </style>
