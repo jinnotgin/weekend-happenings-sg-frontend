@@ -17,14 +17,77 @@ const props = defineProps({
         activeCategory: String,
 });
 
+const createLocationSummary = (event) => {
+        const locationsArray = Array.isArray(event.locations)
+                ? event.locations.filter(Boolean)
+                : [];
+        const fallbackName =
+                event.location ||
+                locationsArray[0]?.name ||
+                locationsArray[0]?.approximate_region ||
+                "Details coming soon";
+
+        const summarizeLocation = (location, fallback) => {
+                if (!location) {
+                        return null;
+                }
+                const detailSegments = [];
+                if (location.approximate_region) {
+                        detailSegments.push(location.approximate_region);
+                }
+                if (location.approximate_nearest_mrt) {
+                        detailSegments.push(
+                                `Near ${location.approximate_nearest_mrt}`
+                        );
+                }
+                return {
+                        name:
+                                location.name ||
+                                location.approximate_region ||
+                                fallback,
+                        details: detailSegments.join(" • ") || null,
+                        mapUrl: location.google_maps_url || null,
+                };
+        };
+
+        if (!locationsArray.length) {
+                return {
+                        name: fallbackName,
+                        details: null,
+                        mapUrl: null,
+                        additionalLocations: 0,
+                        otherLocations: [],
+                };
+        }
+
+        const [primaryLocation, ...otherLocationsRaw] = locationsArray;
+        const primarySummary = summarizeLocation(primaryLocation, fallbackName);
+        const otherLocations = otherLocationsRaw
+                .map((location) => summarizeLocation(location, fallbackName))
+                .filter(Boolean);
+
+        return {
+                name: primarySummary?.name || fallbackName,
+                details: primarySummary?.details || null,
+                mapUrl: primarySummary?.mapUrl || null,
+                additionalLocations: otherLocations.length,
+                otherLocations,
+        };
+};
+
 const filteredEvents = computed(() => {
         if (!props.activeTimeRange || !props.activeCategory) {
                 return [];
         }
-        return events.getItemsInDateRangeAndCategory(
-                props.activeTimeRange,
-                props.activeCategory
-        );
+        return events
+                .getItemsInDateRangeAndCategory(
+                        props.activeTimeRange,
+                        props.activeCategory
+                )
+                .map((event) => ({
+                        ...event,
+                        locationSummary: createLocationSummary(event),
+                }));
 });
 
 const eventListRef = ref(null);
@@ -38,6 +101,25 @@ let mediaQuery;
 let holdTimeoutId = null;
 let holdFired = false;
 let holdIgnoreTimeoutId = null;
+const expandedLocationCards = ref(new Set());
+
+const resetLocationExpansions = () => {
+        expandedLocationCards.value = new Set();
+};
+
+const isLocationsExpanded = (index) => {
+        return expandedLocationCards.value.has(index);
+};
+
+const toggleLocationsExpanded = (index) => {
+        const next = new Set(expandedLocationCards.value);
+        if (next.has(index)) {
+                next.delete(index);
+        } else {
+                next.add(index);
+        }
+        expandedLocationCards.value = next;
+};
 const handleMediaChange = (event) => {
         isMobile.value = event.matches;
 };
@@ -293,6 +375,7 @@ onMounted(() => {
         watch(
                 filteredEvents,
                 async () => {
+                        resetLocationExpansions();
                         await refreshEventElements();
                 },
                 { flush: "post" }
@@ -459,9 +542,91 @@ onBeforeUnmount(() => {
                                                                         <p class="font-sans text-xs uppercase tracking-[0.3em] text-[#f15a24]">
                                                                                 Location
                                                                         </p>
-                                                                        <p class="mt-2 font-serif text-base text-[#1f1b2c] sm:text-lg">
-                                                                                {{ event.location }}
-                                                                        </p>
+                                                                        <div class="mt-2 flex flex-col gap-2">
+                                                                                <div class="flex items-start gap-2">
+                                                                                        <div class="flex-1 flex flex-col gap-1 lg:gap-1.5">
+                                                                                                <p class="font-serif text-base text-[#1f1b2c] sm:text-lg">
+                                                                                                        {{ event.locationSummary.name }}
+                                                                                                </p>
+                                                                                                <p
+                                                                                                        v-if="event.locationSummary.details"
+                                                                                                        class="font-sans text-xs text-[#1f1b2c]/70"
+                                                                                                >
+                                                                                                        {{ event.locationSummary.details }}
+                                                                                                </p>
+                                                                                        </div>
+                                                                                        <a
+                                                                                                v-if="event.locationSummary.mapUrl"
+                                                                                                :href="event.locationSummary.mapUrl"
+                                                                                                target="_blank"
+                                                                                                rel="noopener"
+                                                                                                class="flex shrink-0 items-center justify-center rounded-full border border-[#1f1b2c]/40 bg-white/70 p-1.5 text-[#1f1b2c] transition-colors hover:bg-[#1f1b2c] hover:text-white"
+                                                                                        >
+                                                                                                <vue-feather type="map-pin" class="h-4 w-4" />
+                                                                                                <span class="sr-only">Open map</span>
+                                                                                        </a>
+                                                                                </div>
+                                                                                <div
+                                                                                        v-if="event.locationSummary.additionalLocations"
+                                                                                        class="flex flex-col gap-2"
+                                                                                >
+                                                                                        <button
+                                                                                                type="button"
+                                                                                                class="inline-flex items-center gap-1 self-start rounded-full border border-[#1f1b2c]/30 bg-transparent px-2.5 py-1 text-xs font-sans text-[#1f1b2c] transition-colors hover:border-[#1f1b2c] hover:bg-[#1f1b2c]/5"
+                                                                                                @click="toggleLocationsExpanded(index)"
+                                                                                                :aria-expanded="isLocationsExpanded(index)"
+                                                                                                :aria-controls="`event-location-list-${index}`"
+                                                                                        >
+                                                                                                <vue-feather
+                                                                                                        :type="isLocationsExpanded(index) ? 'chevron-up' : 'chevron-down'"
+                                                                                                        class="h-3.5 w-3.5"
+                                                                                                />
+                                                                                                <span v-if="!isLocationsExpanded(index)">
+                                                                                                        +{{ event.locationSummary.additionalLocations }}
+                                                                                                        more location<span
+                                                                                                                v-if="event.locationSummary.additionalLocations > 1"
+                                                                                                        >s</span>
+                                                                                                </span>
+                                                                                                <span v-else>Hide extra locations</span>
+                                                                                        </button>
+                                                                                        <ul
+                                                                                                v-if="isLocationsExpanded(index)"
+                                                                                                :id="`event-location-list-${index}`"
+                                                                                                class="space-y-2 border-t border-dashed border-[#1f1b2c]/20 pt-2"
+                                                                                        >
+                                                                                                <li
+                                                                                                        v-for="(location, locationIndex) in event.locationSummary.otherLocations"
+                                                                                                        :key="locationIndex"
+                                                                                                        class="flex items-start gap-2"
+                                                                                                >
+                                                                                                        <span class="mt-2 inline-block h-1.5 w-1.5 rounded-full bg-[#1f1b2c]/50"></span>
+                                                                                                        <div class="flex flex-1 flex-col gap-1">
+                                                                                                                <div class="flex items-start gap-2">
+                                                                                                                        <p class="font-serif text-sm text-[#1f1b2c]">
+                                                                                                                                {{ location.name }}
+                                                                                                                        </p>
+                                                                                                                        <a
+                                                                                                                                v-if="location.mapUrl"
+                                                                                                                                :href="location.mapUrl"
+                                                                                                                                target="_blank"
+                                                                                                                                rel="noopener"
+                                                                                                                                class="flex shrink-0 items-center justify-center rounded-full border border-[#1f1b2c]/40 bg-white/70 p-1 text-[#1f1b2c] transition-colors hover:bg-[#1f1b2c] hover:text-white"
+                                                                                                                        >
+                                                                                                                                <vue-feather type="map-pin" class="h-3.5 w-3.5" />
+                                                                                                                                <span class="sr-only">Open map for {{ location.name }}</span>
+                                                                                                                        </a>
+                                                                                                                </div>
+                                                                                                                <p
+                                                                                                                        v-if="location.details"
+                                                                                                                        class="font-sans text-xs text-[#1f1b2c]/70"
+                                                                                                                >
+                                                                                                                        {{ location.details }}
+                                                                                                                </p>
+                                                                                                        </div>
+                                                                                                </li>
+                                                                                        </ul>
+                                                                                </div>
+                                                                        </div>
                                                                 </div>
                                                                 <div class="rounded-2xl border-2 border-dashed border-[#1f1b2c]/40 bg-[#ff8ba7]/20 px-3 py-2.5 sm:px-4 sm:py-3">
                                                                         <p class="font-sans text-xs uppercase tracking-[0.3em] text-[#f15a24]">

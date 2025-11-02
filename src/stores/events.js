@@ -62,6 +62,19 @@ export const useEventsStore = defineStore("events", {
 						allCategories.add(categoryName);
 					}
 
+					const normalizedLocations = Array.isArray(item.locations)
+						? item.locations.filter(Boolean)
+						: [];
+					item.locations = normalizedLocations;
+					if (!item.location) {
+						const primaryLocation = normalizedLocations[0];
+						item.location =
+							primaryLocation?.name ||
+							primaryLocation?.approximate_region ||
+							primaryLocation?.approximate_nearest_mrt ||
+							null;
+					}
+
 					item.thumbnail = item.thumbnail
 						? `${DATA_URL}/${item.thumbnail}`
 						: null;
