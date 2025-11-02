@@ -191,7 +191,7 @@ const currentYear = new Date().getFullYear();
 				class="flex flex-wrap items-center justify-start gap-x-2 gap-y-1 leading-10 font-serif text-xs text-[#1f1b2c] sm:flex-nowrap sm:text-xl md:text-2xl"
 				v-show="isCurrentRoute('/')"
 			>
-				<span>Explore</span>
+				<span class="hidden lg:inline">Explore</span>
 				<DropdownSelector
 					class="text-xs sm:text-lg md:text-xl mr-1 sm:mr-2"
 					:options="categoryOptions"
