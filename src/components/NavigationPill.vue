@@ -67,7 +67,7 @@ const handlePressCancel = () => {
 
 <template>
         <div
-                class="nav-pill lg:hidden fixed bottom-0.5 left-1/2 z-40 -translate-x-1/2 select-none"
+                class="nav-pill lg:hidden fixed bottom-4 left-1/2 z-40 -translate-x-1/2 select-none"
                 :class="{
                         'nav-pill--bounce-up': bounceState === 'up',
                         'nav-pill--bounce-down': bounceState === 'down',
@@ -255,5 +255,9 @@ const handlePressCancel = () => {
 :deep(.nav-pill__content) {
         padding: 0.3rem 0.65rem;
         gap: 0.4rem;
+}
+
+:global(html.has-safari-floating-bar) .nav-pill {
+        bottom: 0;
 }
 </style>
