@@ -103,6 +103,49 @@ const createLocationSummary = (event) => {
         };
 };
 
+const SCROLL_EDGE_THRESHOLD_PX = 200; // Distance (px) from page edges to trigger snap-to-first/last events
+
+const getScrollingElement = () => {
+        if (typeof document === "undefined") {
+                return null;
+        }
+        return document.scrollingElement || document.documentElement;
+};
+
+const isNearTopEdge = () => {
+        if (typeof window === "undefined") {
+                return false;
+        }
+        const scrollingElement = getScrollingElement();
+        if (!scrollingElement) {
+                return false;
+        }
+        const scrollTop = Math.max(
+                scrollingElement.scrollTop,
+                window.scrollY || 0
+        );
+        return scrollTop <= SCROLL_EDGE_THRESHOLD_PX;
+};
+
+const isNearBottomEdge = () => {
+        if (typeof window === "undefined") {
+                return false;
+        }
+        const scrollingElement = getScrollingElement();
+        if (!scrollingElement) {
+                return false;
+        }
+        const scrollTop = Math.max(
+                scrollingElement.scrollTop,
+                window.scrollY || 0
+        );
+        const remainingDistance =
+                scrollingElement.scrollHeight -
+                scrollTop -
+                window.innerHeight;
+        return remainingDistance <= SCROLL_EDGE_THRESHOLD_PX;
+};
+
 const filteredEvents = computed(() => {
         if (
                 !props.activeTimeRange ||
@@ -369,6 +412,21 @@ const handleNavigate = (direction) => {
                 return;
         }
 
+        if (direction === "down") {
+                if (isNearTopEdge()) {
+                        activeEventIndex.value = 0;
+                        scrollToEvent(0);
+                        return;
+                }
+
+                if (isNearBottomEdge()) {
+                        const lastIndex = totalEvents.value - 1;
+                        activeEventIndex.value = lastIndex;
+                        scrollToEvent(lastIndex);
+                        return;
+                }
+        }
+
         const fallbackIndex = visibleEventIndexes.value.length
                 ? visibleEventIndexes.value[0]
                 : 0;
@@ -386,8 +444,9 @@ const handleNavigate = (direction) => {
         }
 
         if (currentIndex >= totalEvents.value - 1) {
-                activeEventIndex.value = totalEvents.value - 1;
-                scrollToPageBoundary("down");
+                const lastIndex = totalEvents.value - 1;
+                activeEventIndex.value = lastIndex;
+                scrollToEvent(lastIndex);
                 return;
         }
         scrollToEvent(currentIndex + 1);
