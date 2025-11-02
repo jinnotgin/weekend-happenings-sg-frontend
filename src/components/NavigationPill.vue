@@ -252,23 +252,6 @@ const handlePressCancel = () => {
         letter-spacing: 0.35em;
 }
 
-@media (prefers-color-scheme: dark) {
-        .nav-pill__count {
-                background:
-                        linear-gradient(
-                                155deg,
-                                rgba(34, 32, 53, 0.9) 0%,
-                                rgba(24, 24, 44, 0.78) 45%,
-                                rgba(16, 16, 32, 0.6) 100%
-                        );
-                color: rgba(255, 255, 255, 0.92);
-                box-shadow:
-                        inset 0 1px 2px rgba(255, 255, 255, 0.2),
-                        inset 0 -2px 5px rgba(0, 0, 0, 0.45),
-                        0 10px 24px rgba(0, 0, 0, 0.35);
-        }
-}
-
 :deep(.nav-pill__content) {
         padding: 0.3rem 0.65rem;
         gap: 0.4rem;
