@@ -1,9 +1,8 @@
 const IOS_VERSION_PATTERN = /OS (\d+)_/i;
+const SAFARI_PATTERN = /Safari/i;
+const CRHOME_AND_FRIENDS_PATTERN = /CriOS|FxiOS|EdgiOS|OPiOS/i;
 
 const isWindowAvailable = () => typeof window !== "undefined";
-
-const isIOSDevice = (userAgent, msStream) =>
-	/iPad|iPhone|iPod/.test(userAgent) && !msStream;
 
 const extractIOSMajorVersion = (userAgent) => {
 	const match = userAgent.match(IOS_VERSION_PATTERN);
@@ -15,80 +14,50 @@ const extractIOSMajorVersion = (userAgent) => {
 	return Number.isNaN(majorVersion) ? null : majorVersion;
 };
 
+const isIOSDevice = (userAgent, msStream) =>
+	/iPad|iPhone|iPod/.test(userAgent) && !msStream;
+
+const isStandaloneMode = (navigator) => navigator?.standalone === true;
+
+const isSafariBrowser = (userAgent) =>
+	SAFARI_PATTERN.test(userAgent) && !CRHOME_AND_FRIENDS_PATTERN.test(userAgent);
+
 export const MIN_SUPPORTED_IOS_VERSION = 26;
 
 /**
- * Detects Safari's floating address bar behaviour and executes a callback once it is observed.
- * Returns a cleanup function to stop listening to viewport changes.
+ * Returns true when the current runtime matches iOS/iPadOS Safari (non-standalone)
+ * at or above the specified minimum major version.
  */
-export function observeSafariFloatingBar(onFloatingBarDetected) {
+export function shouldHideForSafariFloatingBar() {
 	if (!isWindowAvailable()) {
-		return () => {};
+		return false;
 	}
 
-	const { navigator, visualViewport, innerHeight, MSStream } = window;
+	const { navigator, MSStream } = window;
 
-	if (!navigator || !visualViewport) {
-		return () => {};
+	if (!navigator) {
+		return false;
 	}
 
 	const userAgent = navigator.userAgent || "";
 
 	if (!isIOSDevice(userAgent, MSStream)) {
-		return () => {};
+		return false;
 	}
 
-	if (navigator.standalone === true) {
-		return () => {};
+	if (!isSafariBrowser(userAgent)) {
+		return false;
+	}
+
+	if (isStandaloneMode(navigator)) {
+		return false;
 	}
 
 	const iosVersion = extractIOSMajorVersion(userAgent);
 
-	if (iosVersion !== null && iosVersion < MIN_SUPPORTED_IOS_VERSION) {
-		return () => {};
+	if (iosVersion === null) {
+		return false;
 	}
 
-	let hasDetected = false;
-	let cleanup = null;
-	const initialHeight = visualViewport.height;
-	const uiGap = innerHeight - initialHeight;
-
-	const triggerDetection = () => {
-		if (hasDetected) {
-			return;
-		}
-		hasDetected = true;
-		if (typeof onFloatingBarDetected === "function") {
-			onFloatingBarDetected();
-		}
-		if (cleanup) {
-			cleanup();
-			cleanup = null;
-		}
-	};
-
-	if (uiGap > 30) {
-		triggerDetection();
-	}
-
-	const handleViewportResize = () => {
-		if (visualViewport.height > initialHeight) {
-			triggerDetection();
-		}
-	};
-
-	visualViewport.addEventListener("resize", handleViewportResize, {
-		once: false,
-	});
-
-	cleanup = () => {
-		visualViewport.removeEventListener("resize", handleViewportResize);
-	};
-
-	return () => {
-		if (cleanup) {
-			cleanup();
-			cleanup = null;
-		}
-	};
+	return iosVersion >= MIN_SUPPORTED_IOS_VERSION;
 }
