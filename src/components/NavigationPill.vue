@@ -1,7 +1,8 @@
 <script setup>
-import { computed } from "vue";
+import { computed, onBeforeUnmount, onMounted, ref } from "vue";
 import GlassSurface from "@/components/GlassSurface.vue";
 import VueFeather from "vue-feather";
+import { observeSafariFloatingBar } from "@/utils/safariUiDetector";
 
 const props = defineProps({
 	bounceState: {
@@ -32,6 +33,22 @@ const emit = defineEmits([
 	"press-end",
 	"press-cancel",
 ]);
+
+const hideForSafariFloatingBar = ref(false);
+let teardownSafariObserver = null;
+
+onMounted(() => {
+	teardownSafariObserver = observeSafariFloatingBar(() => {
+		hideForSafariFloatingBar.value = true;
+	});
+});
+
+onBeforeUnmount(() => {
+	if (typeof teardownSafariObserver === "function") {
+		teardownSafariObserver();
+		teardownSafariObserver = null;
+	}
+});
 
 const safeAreaStyle = computed(() => ({
 	paddingBottom: "calc(env(safe-area-inset-bottom) + 0.25rem)",
@@ -66,7 +83,7 @@ const handlePressCancel = () => {
 </script>
 
 <template>
-	<div class="nav-pill lg:hidden fixed bottom-4 left-1/2 z-40 -translate-x-1/2 select-none" :class="{
+	<div v-if="!hideForSafariFloatingBar" class="nav-pill lg:hidden fixed bottom-4 left-1/2 z-40 -translate-x-1/2 select-none" :class="{
 		'nav-pill--bounce-up': bounceState === 'up',
 		'nav-pill--bounce-down': bounceState === 'down',
 	}" :style="safeAreaStyle">
@@ -224,9 +241,5 @@ const handlePressCancel = () => {
 :deep(.nav-pill__content) {
 	padding: 0.3rem 0.65rem;
 	gap: 0.4rem;
-}
-
-:global(html.has-safari-floating-bar) .nav-pill {
-	display: none;
 }
 </style>
