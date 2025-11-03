@@ -1,6 +1,6 @@
 const SAFARI_VERSION_PATTERN = /Version\/(\d+)\./i;
 const SAFARI_PATTERN = /Safari/i;
-const CHROMIUM_IOS_PATTERN = /CriOS|FxiOS|EdgiOS|OPiOS/i;
+const CRHOME_AND_FRIENDS_PATTERN = /CriOS|FxiOS|EdgiOS|OPiOS/i;
 
 const isWindowAvailable = () => typeof window !== "undefined";
 
@@ -20,7 +20,7 @@ const isIOSDevice = (userAgent, msStream) =>
 const isStandaloneMode = (navigator) => navigator?.standalone === true;
 
 const isSafariBrowser = (userAgent) =>
-	SAFARI_PATTERN.test(userAgent) && !CHROMIUM_IOS_PATTERN.test(userAgent);
+	SAFARI_PATTERN.test(userAgent) && !CRHOME_AND_FRIENDS_PATTERN.test(userAgent);
 
 export const MIN_SUPPORTED_SAFARI_VERSION = 26;
 
@@ -28,14 +28,14 @@ export const MIN_SUPPORTED_SAFARI_VERSION = 26;
  * Returns true when the current runtime matches iOS/iPadOS Safari (non-standalone)
  * at or above the specified minimum Safari major version.
  */
-const meetsSafariFloatingBarRequirements = () => {
+export function shouldHideForSafariFloatingBar() {
 	if (!isWindowAvailable()) {
 		return false;
 	}
 
-	const { navigator, MSStream, visualViewport } = window;
+	const { navigator, MSStream } = window;
 
-	if (!navigator || !visualViewport) {
+	if (!navigator) {
 		return false;
 	}
 
@@ -60,60 +60,4 @@ const meetsSafariFloatingBarRequirements = () => {
 	}
 
 	return safariVersion >= MIN_SUPPORTED_SAFARI_VERSION;
-};
-
-export function shouldHideForSafariFloatingBar() {
-	return meetsSafariFloatingBarRequirements();
-}
-
-export function observeSafariFloatingBar(onDetected) {
-	if (!meetsSafariFloatingBarRequirements()) {
-		return () => {};
-	}
-
-	const { visualViewport, innerHeight } = window;
-	const initialHeight = visualViewport.height;
-	const uiGap = innerHeight - initialHeight;
-
-	let cleanup = null;
-	let hasDetected = false;
-
-	const triggerDetection = () => {
-		if (hasDetected) {
-			return;
-		}
-		hasDetected = true;
-		if (typeof onDetected === "function") {
-			onDetected();
-		}
-		if (cleanup) {
-			cleanup();
-			cleanup = null;
-		}
-	};
-
-	if (uiGap > 30) {
-		triggerDetection();
-	}
-
-	const handleViewportResize = () => {
-		if (visualViewport.height > initialHeight) {
-			triggerDetection();
-		}
-	};
-
-	visualViewport.addEventListener("resize", handleViewportResize, {
-		once: false,
-	});
-
-	cleanup = () => {
-		visualViewport.removeEventListener("resize", handleViewportResize);
-	};
-
-	return () => {
-		if (cleanup) {
-			cleanup();
-			cleanup = null;
-		}
-	};
 }
