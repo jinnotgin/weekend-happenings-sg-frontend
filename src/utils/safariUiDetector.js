@@ -1,7 +1,12 @@
 class SafariUiDetector {
 	constructor() {
+		const userAgent = window.navigator.userAgent || "";
+		const isIphoneOrIpad = /(iPhone|iPad)/i.test(userAgent);
+		const versionMatch = userAgent.match(/OS (\d+)_/i);
+		const iosMajorVersion = versionMatch ? parseInt(versionMatch[1], 10) : null;
+
 		this.isIOS =
-			/iPad|iPhone|iPod/.test(window.navigator.userAgent) && !window.MSStream;
+			isIphoneOrIpad && iosMajorVersion !== null && iosMajorVersion >= 26;
 		this.isStandalone = window.navigator.standalone === true;
 		this.hasDynamicUi = false;
 

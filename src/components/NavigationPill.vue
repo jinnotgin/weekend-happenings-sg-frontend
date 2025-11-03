@@ -227,6 +227,6 @@ const handlePressCancel = () => {
 }
 
 :global(html.has-safari-floating-bar) .nav-pill {
-	display: none;
+	bottom: 0;
 }
 </style>
