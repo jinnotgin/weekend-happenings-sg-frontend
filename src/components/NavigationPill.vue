@@ -1,8 +1,8 @@
 <script setup>
-import { computed, onMounted, ref } from "vue";
+import { computed, onBeforeUnmount, onMounted, ref } from "vue";
 import GlassSurface from "@/components/GlassSurface.vue";
 import VueFeather from "vue-feather";
-import { shouldHideForSafariFloatingBar } from "@/utils/safariUiDetector";
+import { observeSafariFloatingBar } from "@/utils/safariUiDetector";
 
 const props = defineProps({
 	bounceState: {
@@ -35,9 +35,19 @@ const emit = defineEmits([
 ]);
 
 const hideForSafariFloatingBar = ref(false);
+let teardownSafariObserver = null;
 
 onMounted(() => {
-	hideForSafariFloatingBar.value = shouldHideForSafariFloatingBar();
+	teardownSafariObserver = observeSafariFloatingBar(() => {
+		hideForSafariFloatingBar.value = true;
+	});
+});
+
+onBeforeUnmount(() => {
+	if (typeof teardownSafariObserver === "function") {
+		teardownSafariObserver();
+		teardownSafariObserver = null;
+	}
 });
 
 const safeAreaStyle = computed(() => ({
