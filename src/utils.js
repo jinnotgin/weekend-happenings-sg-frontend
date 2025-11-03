@@ -129,28 +129,27 @@ export function checkDateOverlap(withinRange, findRange) {
 }
 
 export function getCheckpointTimestamp() {
-	const SGT_OFFSET = 8; // Singapore is GMT+8
+	const SGT_OFFSET = 8;
+	const CHECKPOINT_HOUR = 5;
+	const CHECKPOINT_DAYS = [2, 4]; // Tuesday=2, Thursday=4
 
-	// convert to SGT and adjust to last Tuesday or Thursday
 	let now = new Date();
-	let dayOfWeek = now.getUTCDay();
-	let hour = now.getUTCHours() + SGT_OFFSET; // Get hour in SGT
+	
+	// Start with today at 5 AM SGT
+	let checkpoint = new Date(now);
+	checkpoint.setUTCHours(CHECKPOINT_HOUR - SGT_OFFSET, 0, 0, 0);
 
-	let daysToAdjust;
-	if (dayOfWeek > 2 || (dayOfWeek === 2 && hour >= 3)) {
-		// After Tuesday 3 AM SGT
-		daysToAdjust = dayOfWeek - 2;
-	} else if (dayOfWeek < 2 || (dayOfWeek === 2 && hour < 3)) {
-		// Before Tuesday 3 AM SGT
-		daysToAdjust = 7 - (2 - dayOfWeek);
+	// If this checkpoint hasn't occurred yet, start from yesterday
+	if (checkpoint > now) {
+		checkpoint.setUTCDate(checkpoint.getUTCDate() - 1);
 	}
 
-	let lastDay = new Date(now);
-	lastDay.setUTCDate(now.getUTCDate() - daysToAdjust);
-	lastDay.setUTCHours(3 - SGT_OFFSET, 0, 0, 0); // Set to 3 AM SGT
+	// Go backwards until we hit a Tuesday or Thursday
+	while (!CHECKPOINT_DAYS.includes(checkpoint.getUTCDay())) {
+		checkpoint.setUTCDate(checkpoint.getUTCDate() - 1);
+	}
 
-	let timestamp = lastDay.getTime(); // Return Unix timestamp
-	return `${timestamp}`;
+	return `${checkpoint.getTime()}`;
 }
 
 export function calculateDistanceKm(pointA, pointB) {
