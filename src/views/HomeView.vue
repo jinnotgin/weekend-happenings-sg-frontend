@@ -743,12 +743,12 @@ onBeforeUnmount(() => {
                                                                         >
                                                                                 <vue-feather type="arrow-up-right" class="h-4 w-4 sm:h-5 sm:w-5" />
                                                                         </a>
-                                                                        <VMenu class="hidden sm:inline-flex">
+                                                                        <VMenu class="inline-flex">
                                                                                 <button
                                                                                         type="button"
-                                                                                        class="flex h-9 w-9 items-center justify-center rounded-full border-2 border-[#1f1b2c] bg-white text-[#1f1b2c] shadow-[4px_4px_0_#1f1b2c] transition-all hover:-translate-y-0.5 hover:shadow-[6px_6px_0_#f15a24]"
+                                                                                        class="flex h-8 w-8 items-center justify-center rounded-full border-2 border-[#1f1b2c] bg-white text-[#1f1b2c] shadow-[4px_4px_0_#1f1b2c] transition-all hover:-translate-y-0.5 hover:shadow-[6px_6px_0_#f15a24] sm:h-9 sm:w-9"
                                                                                 >
-                                                                                        <vue-feather type="info" class="h-5 w-5" />
+                                                                                        <vue-feather type="info" class="h-4 w-4 sm:h-5 sm:w-5" />
                                                                                 </button>
                                                                         <template #popper>
                                                                                 <div
