@@ -54,9 +54,9 @@ const locationOptions = computed(() => {
 		anywhere: "Singapore",
 	};
 	const regions = Array.isArray(events.regions) ? events.regions : [];
-	const normalizedRegions = new Map(
-		regions.map((region) => [region.toLowerCase(), region])
-	);
+        const normalizedRegions = new Map(
+                regions.map((region) => [region.toLowerCase(), region])
+        );
 
 	const orderedRegions = [];
 	for (const regionName of preferredRegionOrder) {
@@ -67,13 +67,17 @@ const locationOptions = computed(() => {
 		}
 	}
 
-	const remainingRegions = Array.from(normalizedRegions.values()).sort(
-		(a, b) => a.localeCompare(b, undefined, { sensitivity: "base" })
-	);
+        // const remainingRegions = Array.from(normalizedRegions.values()).sort(
+        //      (a, b) => a.localeCompare(b, undefined, { sensitivity: "base" })
+        // );
 
-	for (const region of [...orderedRegions, ...remainingRegions]) {
-		options[region] = region;
-	}
+        // for (const region of [...orderedRegions, ...remainingRegions]) {
+        //      options[region] = region;
+        // }
+
+        for (const region of orderedRegions) {
+                options[region] = region;
+        }
 
 	options.nearMe = "your area";
 
