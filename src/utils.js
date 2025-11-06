@@ -149,7 +149,9 @@ export function getCheckpointTimestamp() {
 		checkpoint.setUTCDate(checkpoint.getUTCDate() - 1);
 	}
 
-	return `${checkpoint.getTime()}`;
+	// TODO: addding a random seed number here, more for debug purposes to get a new item from cache
+	const SEED_NUMBER = 1;
+	return `${checkpoint.getTime() + SEED_NUMBER}`;
 }
 
 export function calculateDistanceKm(pointA, pointB) {
