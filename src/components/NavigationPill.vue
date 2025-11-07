@@ -266,6 +266,18 @@ const handlePressCancel = () => {
   letter-spacing: 0.35em;
 }
 
+:deep(.nav-pill__surface.glass-surface--fallback) {
+  border-radius: 999px;
+  border: 1px solid rgba(31, 27, 44, 0.18);
+  background: linear-gradient(
+    135deg,
+    rgba(255, 255, 255, 0.85) 0%,
+    rgba(255, 255, 255, 0.55) 45%,
+    rgba(255, 255, 255, 0.35) 100%
+  );
+  backdrop-filter: saturate(1.5) blur(18px);
+}
+
 :deep(.nav-pill__content) {
   padding: 0.3rem 0.65rem;
   gap: 0.4rem;
