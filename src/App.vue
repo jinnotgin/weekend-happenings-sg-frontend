@@ -210,6 +210,8 @@ const currentYear = new Date().getFullYear();
       v-if="showOverlayHeader"
       class="fixed inset-x-0 top-0 z-50 px-4 pt-4 sm:pt-5"
     >
+	<!-- Remove app header icon for now -->
+	<!--
       <div
         class="mx-auto flex w-full max-w-6xl items-start justify-between gap-4"
       >
@@ -247,7 +249,10 @@ const currentYear = new Date().getFullYear();
             </span>
           </button>
         </GlassSurface>
-
+	-->
+      <div
+        class="mx-auto flex w-full max-w-6xl items-start justify-end gap-4"
+      >
         <button
           type="button"
           class="overlay-chip-button"
