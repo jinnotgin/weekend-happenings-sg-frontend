@@ -36,6 +36,31 @@ let holdEffectTimeoutId = null;
 // Prevents repeatedly snapping to the last event when the user is already at the bottom edge.
 let hasBottomEdgeSnap = false;
 
+const formattedGenerationDate = computed(() => {
+	if (!events.generationTime) {
+		return "";
+	}
+	const generationDate = new Date(events.generationTime);
+	if (Number.isNaN(generationDate.getTime())) {
+		return "";
+	}
+	const datePart = generationDate.toLocaleDateString("en-GB", {
+		day: "numeric",
+		month: "short",
+		year: "numeric",
+	});
+	const timePart = generationDate.toLocaleTimeString("en-GB", {
+		hour: "numeric",
+		minute: "2-digit",
+		second: "2-digit",
+		hour12: true,
+	});
+	const normalizedTime = timePart
+		.replace(/\s?(am|pm)$/i, (_, meridiem) => ` ${meridiem.toLowerCase()}`)
+		.trim();
+	return `${datePart}, ${normalizedTime}`;
+});
+
 const extractCoordinates = (coords) => {
 	if (!coords || typeof coords !== "object") {
 		return null;
@@ -854,7 +879,7 @@ onBeforeUnmount(() => {
 				@press-end="handlePressEnd" @press-cancel="handlePressCancel" />
 			<p class="text-center font-sans text-xs sm:text-sm uppercase tracking-[0.3em] text-[#1f1b2c]/70"
 				v-show="filteredEvents.length > 0">
-				Events sourced on {{ new Date(events.generationTime).toLocaleString() }}.
+				Events sourced on {{ formattedGenerationDate }}.
 			</p>
 		</div>
 	</main>
