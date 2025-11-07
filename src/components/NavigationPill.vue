@@ -206,9 +206,23 @@ const handlePressCancel = () => {
 }
 
 .nav-pill__button {
+  position: relative;
+  overflow: visible;
   transition: transform 0.15s ease, box-shadow 0.15s ease,
     background-color 0.15s ease;
   box-shadow: 0 0 0 0 rgba(255, 255, 255, 0);
+}
+
+.nav-pill__button::after {
+  /* Invisible halo to hit ~52px touch target without changing visuals */
+  content: "";
+  position: absolute;
+  top: -16px;
+  bottom: -16px;
+  left: -12px;
+  right: -12px;
+  border-radius: 999px;
+  background: transparent;
 }
 
 .nav-pill__button:focus-visible {
