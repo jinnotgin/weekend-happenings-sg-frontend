@@ -38,21 +38,19 @@
 		</div>
 		<p>
 			Hello! I'm
-			<a href="https://jinn.me"
+			<a href="https://itsjin.com"
 				class="underline decoration-2 decoration-[#8ec5ff] underline-offset-4 hover:text-[#f15a24]"
-				target="_blank">Jin</a>, a business analyst and full-stack developer with a passion for leveraging technology to
-			unlock innovation in everyday processes.
+				target="_blank">Jin</a>. I work in applied innovation, where I track early signals, build practical tools, and
+			study how new technologies change digital and human systems.
 		</p>
 		<p>
-			At the heart of my work is a blend of innovation and empathy. Whether it's through crafting intuitive web
-			applications, automating complex processes, or facilitating sense-making of large data sets, my goal remains
-			constant: to create solutions that make life easier and more enjoyable for people.
+			My current focus is AI in the software lifecycle: where it helps, where it creates new tradeoffs, and what it
+			takes for AI-enabled tools to survive contact with real workflows, messy information, and actual users.
 		</p>
 
 		<p>
-			In my professional career, I have worked on many types of systems, be it digital, product-oriented, and even human
-			organisational systems, all with the goal of long-term success and sustainability. You can learn more about me
-			from my
+			Across public platforms, commercial workflows, and personal builds like this one, I keep coming back to the same
+			question: how do we make complex signals easier to understand and act on? You can learn more about my work from my
 			<a href="https://www.linkedin.com/in/jin-sg/"
 				class="underline decoration-2 decoration-[#8ec5ff] underline-offset-4 hover:text-[#f15a24]"
 				target="_blank">LinkedIn</a>,
@@ -60,9 +58,9 @@
 				class="underline decoration-2 decoration-[#8ec5ff] underline-offset-4 hover:text-[#f15a24]"
 				target="_blank">GitHub</a>,
 			or
-			<a href="https://jinn.me"
+			<a href="https://itsjin.com"
 				class="underline decoration-2 decoration-[#8ec5ff] underline-offset-4 hover:text-[#f15a24]"
-				target="_blank">personal portfolio</a>.
+				target="_blank">personal site</a>.
 		</p>
 	</article>
 </template>
