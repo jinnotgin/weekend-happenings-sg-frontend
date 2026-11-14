@@ -7,13 +7,19 @@ import {
 	nextTick,
 	watch,
 } from "vue";
+import { RouterLink, useRoute, useRouter } from "vue-router";
 import { useEventsStore } from "@/stores/events.js";
-import { calculateDistanceKm } from "@/utils.js";
+import { useStarredVenuesStore } from "@/stores/starredVenues.js";
+import { calculateDistanceKm, isWithinLastDays } from "@/utils.js";
 import VueFeather from "vue-feather";
 import CurvedLoop from "@/components/CurvedLoop.vue";
 import NavigationPill from "@/components/NavigationPill.vue";
+import StarVenueButton from "@/components/StarVenueButton.vue";
 
 const events = useEventsStore();
+const starredVenues = useStarredVenuesStore();
+const route = useRoute();
+const router = useRouter();
 const props = defineProps({
 	activeTimeRange: String,
 	activeCategory: String,
@@ -23,6 +29,7 @@ const props = defineProps({
 });
 
 const NEAR_ME_RADIUS_KM = 10;
+const NEW_EVENT_WINDOW_DAYS = 7;
 const SCROLL_EDGE_THRESHOLD_PX = 160; // Distance (px) from page edges to trigger snap-to-first/last events
 const bounceDurationMs = 600;
 const HOLD_EFFECT_DURATION_MS = 720;
@@ -113,6 +120,11 @@ const createLocationSummary = (event) => {
 				fallback,
 			details: detailSegments.join(" • ") || null,
 			mapUrl: location.google_maps_url || null,
+			venueId: location.venue_id || null,
+			venueName:
+				location.venue_name ||
+				location.name ||
+				null,
 		};
 	};
 
@@ -121,6 +133,8 @@ const createLocationSummary = (event) => {
 			name: fallbackName,
 			details: null,
 			mapUrl: null,
+			venueId: null,
+			venueName: null,
 			additionalLocations: 0,
 			otherLocations: [],
 		};
@@ -136,6 +150,8 @@ const createLocationSummary = (event) => {
 		name: primarySummary?.name || fallbackName,
 		details: primarySummary?.details || null,
 		mapUrl: primarySummary?.mapUrl || null,
+		venueId: primarySummary?.venueId || null,
+		venueName: primarySummary?.venueName || null,
 		additionalLocations: otherLocations.length,
 		otherLocations,
 	};
@@ -210,6 +226,66 @@ const triggerHoldEffect = (direction) => {
 	}, HOLD_EFFECT_DURATION_MS);
 };
 
+const getEventVenueIds = (event) => {
+	return (Array.isArray(event.locations) ? event.locations : [])
+		.map((location) => location?.venue_id)
+		.filter(Boolean);
+};
+
+// single-venue filter from the query string, e.g. /?venue=v_esplanade
+const activeVenueId = computed(() => {
+	const rawVenue = route.query.venue;
+	const venueId = Array.isArray(rawVenue) ? rawVenue[0] : rawVenue;
+	return venueId ? events.resolveVenueId(venueId) : null;
+});
+
+const activeVenueName = computed(() => {
+	if (!activeVenueId.value) {
+		return "";
+	}
+	return (
+		events.getVenueName(activeVenueId.value) ||
+		starredVenues.items.find(({ id }) => id === activeVenueId.value)?.name ||
+		"this venue"
+	);
+});
+
+const isStarredFilterActive = computed(() => {
+	return !activeVenueId.value && props.activeLocation === "starred";
+});
+
+// events at the selected venue regardless of date / category, to hint at other periods
+const activeVenueTotalEvents = computed(() => {
+	if (!activeVenueId.value) {
+		return 0;
+	}
+	return events.eventCountsByVenueId.get(activeVenueId.value) || 0;
+});
+
+function clearVenueFilter() {
+	const { venue, ...restQuery } = route.query;
+	router.replace({ query: restQuery });
+}
+
+// Skip the "New" badge when most events are new (e.g. the first run with first_seen data),
+// since it would then be on nearly every card and carry no information.
+const shouldShowNewBadges = computed(() => {
+	if (!events.items.length) {
+		return false;
+	}
+	const newCount = events.items.filter((item) =>
+		isWithinLastDays(item.first_seen, NEW_EVENT_WINDOW_DAYS)
+	).length;
+	return newCount > 0 && newCount / events.items.length < 0.5;
+});
+
+const isNewEvent = (event) => {
+	return (
+		shouldShowNewBadges.value &&
+		isWithinLastDays(event.first_seen, NEW_EVENT_WINDOW_DAYS)
+	);
+};
+
 const filteredEvents = computed(() => {
 	if (
 		!props.activeTimeRange ||
@@ -220,8 +296,19 @@ const filteredEvents = computed(() => {
 	}
 
 	const matchesLocation = (event) => {
+		// a single-venue filter replaces the region filter
+		if (activeVenueId.value) {
+			return getEventVenueIds(event).includes(activeVenueId.value);
+		}
+
 		if (!props.activeLocation || props.activeLocation === "anywhere") {
 			return true;
+		}
+
+		if (props.activeLocation === "starred") {
+			return getEventVenueIds(event).some((venueId) =>
+				starredVenues.isStarred(venueId)
+			);
 		}
 
 		if (props.activeLocation === "nearMe") {
@@ -273,6 +360,7 @@ const filteredEvents = computed(() => {
 		.map((event) => ({
 			...event,
 			locationSummary: createLocationSummary(event),
+			isNew: isNewEvent(event),
 		}));
 });
 
@@ -705,10 +793,47 @@ onBeforeUnmount(() => {
 			</div>
 			<div v-show="shouldShowEmptyState"
 				class="mx-auto w-full max-w-6xl rounded-[32px] border-4 border-black bg-white/80 px-4 py-8 text-center font-sans text-sm shadow-[8px_8px_0_#1f1b2c] backdrop-blur sm:px-8 sm:py-12 sm:text-lg sm:shadow-[16px_16px_0_#1f1b2c]">
-				<p>Oh no! 😞 We couldn't find any events for this category / time period / area.</p>
-				<p class="mt-4 text-xs uppercase tracking-[0.3em] text-[#f15a24] sm:text-sm">
-					Try adjusting your filters for more results!
-				</p>
+				<template v-if="activeVenueId">
+					<p>No events at {{ activeVenueName }} for this category / time period.</p>
+					<p class="mt-4 text-xs uppercase tracking-[0.3em] text-[#f15a24] sm:text-sm">
+						<template v-if="activeVenueTotalEvents > 0">
+							{{ activeVenueTotalEvents }} event<span v-if="activeVenueTotalEvents > 1">s</span>
+							listed here for other dates or categories - try widening your filters!
+						</template>
+						<template v-else>No events listed here right now.</template>
+					</p>
+					<button type="button"
+						class="mt-6 rounded-full border-2 border-black bg-[#ffe066] px-4 py-2 font-sans text-xs font-semibold uppercase tracking-[0.2em] text-[#1f1b2c] shadow-[4px_4px_0_#1f1b2c] transition-transform hover:-translate-y-0.5 hover:shadow-[6px_6px_0_#f15a24] sm:text-sm"
+						@click="clearVenueFilter">
+						Show all venues
+					</button>
+				</template>
+				<template v-else-if="isStarredFilterActive && starredVenues.count === 0">
+					<p>You haven't saved any venues yet. ⭐</p>
+					<p class="mt-3 text-[#1f1b2c]/80">
+						Tap the
+						<vue-feather type="star" class="inline-block h-4 w-4 align-[-2px]" aria-hidden="true" />
+						<span class="sr-only">star</span>
+						next to a venue's name on any event to save it. Events at your saved venues will show up here.
+					</p>
+					<p class="mt-4 text-xs uppercase tracking-[0.3em] text-[#f15a24] sm:text-sm">
+						Pick another area above to browse events!
+					</p>
+				</template>
+				<template v-else-if="isStarredFilterActive">
+					<p>None of your saved venues have events for this category / time period.</p>
+					<p class="mt-4 text-xs uppercase tracking-[0.3em] text-[#f15a24] sm:text-sm">
+						Try widening your filters, or
+						<RouterLink to="/saved" class="underline decoration-2 underline-offset-4 hover:text-[#1f1b2c]">
+							see your saved venues</RouterLink>.
+					</p>
+				</template>
+				<template v-else>
+					<p>Oh no! 😞 We couldn't find any events for this category / time period / area.</p>
+					<p class="mt-4 text-xs uppercase tracking-[0.3em] text-[#f15a24] sm:text-sm">
+						Try adjusting your filters for more results!
+					</p>
+				</template>
 			</div>
 			<ul class="flex flex-col gap-8" v-show="filteredEvents.length > 0" ref="eventListRef">
 				<li v-for="(event, index) in filteredEvents" :key="index" class="transition-transform duration-200"
@@ -723,6 +848,9 @@ onBeforeUnmount(() => {
 								<div class="flex items-start gap-3 sm:gap-4">
 									<a :href="event.link" target="_blank" rel="noopener"
 										class="min-w-0 flex-1 text-xl font-bold leading-tight text-[#1f1b2c] underline-offset-8 transition-colors hover:text-[#f15a24] hover:underline sm:text-3xl">
+										<span v-if="event.isNew"
+											class="mr-2 inline-block -translate-y-0.5 rounded-full border-2 border-[#1f1b2c] bg-[#ffe066] px-2 py-0.5 align-middle font-sans text-[10px] font-semibold uppercase tracking-[0.2em] text-[#1f1b2c] sm:text-xs">New<span
+												class="sr-only">:</span></span>
 										<span class="min-w-0 break-words">{{
 											event.title }}</span>
 									</a>
@@ -788,13 +916,20 @@ onBeforeUnmount(() => {
 														}}
 													</p>
 												</div>
-												<a v-if="event.locationSummary.mapUrl" :href="event.locationSummary.mapUrl" target="_blank"
-													rel="noopener"
-													class="flex shrink-0 items-center justify-center rounded-full border border-[#1f1b2c]/40 bg-white/70 p-1.5 text-[#1f1b2c] transition-colors hover:bg-[#1f1b2c] hover:text-white">
-													<vue-feather type="map-pin" class="h-4 w-4" />
-													<span class="sr-only">Open
-														map</span>
-												</a>
+												<!-- stack icons vertically while the location column is narrow -->
+												<div v-if="event.locationSummary.mapUrl || event.locationSummary.venueId"
+													class="flex shrink-0 items-center gap-2 sm:flex-col sm:gap-4 xl:flex-row xl:gap-2">
+													<a v-if="event.locationSummary.mapUrl" :href="event.locationSummary.mapUrl" target="_blank"
+														rel="noopener"
+														class="flex shrink-0 items-center justify-center rounded-full border border-[#1f1b2c]/40 bg-white/70 p-1.5 text-[#1f1b2c] transition-colors hover:bg-[#1f1b2c] hover:text-white">
+														<vue-feather type="map-pin" class="h-4 w-4" />
+														<span class="sr-only">Open
+															map</span>
+													</a>
+													<StarVenueButton v-if="event.locationSummary.venueId"
+														:venue-id="event.locationSummary.venueId"
+														:venue-name="event.locationSummary.venueName" />
+												</div>
 											</div>
 											<div v-if="event.locationSummary.additionalLocations" class="flex flex-col gap-2">
 												<button type="button"
@@ -836,6 +971,8 @@ onBeforeUnmount(() => {
 																			location.name
 																		}}</span>
 																</a>
+																<StarVenueButton v-if="location.venueId" :venue-id="location.venueId"
+																	:venue-name="location.venueName" />
 															</div>
 															<p v-if="location.details" class="font-sans text-xs text-[#1f1b2c]/70">
 																{{

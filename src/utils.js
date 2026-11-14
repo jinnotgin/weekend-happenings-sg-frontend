@@ -191,3 +191,60 @@ export function calculateDistanceKm(pointA, pointB) {
 
 	return R * c;
 }
+
+/**
+ * Resolves a venue ID through a redirects map (merged/retired ID -> surviving ID),
+ * following chains and guarding against cycles.
+ *
+ * @param {string | null | undefined} venueId - The venue ID to resolve.
+ * @param {Object<string, string>} redirects - Map of old venue IDs to newer ones.
+ * @returns {string | null} The final venue ID, or null if none was given.
+ */
+export function resolveVenueId(venueId, redirects = {}) {
+	if (!venueId || typeof venueId !== "string") {
+		return null;
+	}
+	if (!redirects || typeof redirects !== "object") {
+		return venueId;
+	}
+
+	const visited = new Set([venueId]);
+	let currentId = venueId;
+	while (
+		Object.prototype.hasOwnProperty.call(redirects, currentId) &&
+		typeof redirects[currentId] === "string" &&
+		redirects[currentId]
+	) {
+		const nextId = redirects[currentId];
+		if (visited.has(nextId)) {
+			// cycle detected, stop at the last ID before looping
+			break;
+		}
+		visited.add(nextId);
+		currentId = nextId;
+	}
+	return currentId;
+}
+
+/**
+ * Checks whether an ISO date string ("YYYY-MM-DD") falls within the last `days` days.
+ *
+ * @param {string | null | undefined} isoDate - The date to check.
+ * @param {number} days - Size of the window in days.
+ * @param {Date} now - Reference date. Defaults to the current date.
+ * @returns {boolean} True if the date is within the window.
+ */
+export function isWithinLastDays(isoDate, days, now = new Date()) {
+	if (!isoDate || typeof isoDate !== "string") {
+		return false;
+	}
+	const match = isoDate.match(/^(\d{4})-(\d{2})-(\d{2})/);
+	if (!match) {
+		return false;
+	}
+	const [, year, month, day] = match.map(Number);
+	const date = new Date(year, month - 1, day);
+	const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+	const diffDays = (today - date) / (24 * 60 * 60 * 1000);
+	return diffDays >= 0 && diffDays < days;
+}

@@ -3,6 +3,7 @@ import { ref, computed, onMounted, onBeforeUnmount } from "vue";
 import { RouterLink, RouterView, useRoute, useRouter } from "vue-router";
 import VueFeather from "vue-feather";
 import { useEventsStore } from "@/stores/events.js";
+import { useStarredVenuesStore } from "@/stores/starredVenues.js";
 import DropdownSelector from "@/components/DropdownSelector.vue";
 import GlassSurface from "@/components/GlassSurface.vue";
 import overlayLogo from "@/assets/nowinsg_logo_withShadow.svg";
@@ -60,6 +61,7 @@ function handleOverlayBackToTop() {
 }
 
 const events = useEventsStore();
+const starredVenues = useStarredVenuesStore();
 onMounted(() => {
   if (
     events.fetchEventsStatus === "idle" ||
@@ -130,9 +132,32 @@ const locationOptions = computed(() => {
   }
 
   options.nearMe = "your area";
+  options.starred = "saved venues";
 
   return options;
 });
+
+// single-venue filter (from the Saved venues page), e.g. /?venue=v_esplanade
+const activeVenueId = computed(() => {
+  const rawVenue = route.query.venue;
+  const venueId = Array.isArray(rawVenue) ? rawVenue[0] : rawVenue;
+  return venueId ? events.resolveVenueId(venueId) : null;
+});
+const activeVenueName = computed(() => {
+  if (!activeVenueId.value) {
+    return "";
+  }
+  return (
+    events.getVenueName(activeVenueId.value) ||
+    starredVenues.items.find(({ id }) => id === activeVenueId.value)?.name ||
+    "this venue"
+  );
+});
+function clearVenueFilter() {
+  const { venue, ...restQuery } = route.query;
+  events.triggerFakeLoading();
+  router.replace({ query: restQuery });
+}
 const activeLocation = ref("anywhere");
 const userLocation = ref(null);
 /**
@@ -334,6 +359,21 @@ const currentYear = new Date().getFullYear();
               Home
             </button>
           </RouterLink>
+          <RouterLink to="/saved" v-show="!isCurrentRoute('/saved')">
+            <button
+              class="flex items-center gap-1.5 rounded-full border-2 border-black bg-white px-2 py-1 font-sans text-xs font-semibold uppercase tracking-[0.2em] text-[#1f1b2c] shadow-[4px_4px_0_#1f1b2c] transition-transform hover:-translate-y-0.5 hover:bg-[#ffe066] hover:shadow-[6px_6px_0_#f15a24] sm:px-4 sm:py-2 sm:text-sm sm:tracking-widest"
+              :aria-label="`Saved venues (${starredVenues.count})`"
+            >
+              <VueFeather
+                type="star"
+                class="h-4 w-4"
+                :fill="starredVenues.count ? 'currentColor' : 'none'"
+                aria-hidden="true"
+              />
+              <!-- icon-only on small screens so the title doesn't wrap -->
+              <span class="hidden sm:inline">Saved</span>
+            </button>
+          </RouterLink>
           <RouterLink to="/about" v-show="!isCurrentRoute('/about')">
             <button
               class="rounded-full border-2 border-black bg-white px-3 py-1 font-sans text-xs font-semibold uppercase tracking-[0.2em] text-[#1f1b2c] shadow-[4px_4px_0_#1f1b2c] transition-transform hover:-translate-y-0.5 hover:bg-[#ff8ba7] hover:shadow-[6px_6px_0_#f15a24] sm:px-4 sm:py-2 sm:text-sm sm:tracking-widest"
@@ -362,13 +402,35 @@ const currentYear = new Date().getFullYear();
           :selectedValue="activeTimeRange"
           @update:selectedValue="handleTimeRangeChange"
         />
-        <span>in</span>
-        <DropdownSelector
-          class="text-xs sm:text-lg md:text-xl mr-1 sm:mr-2"
-          :options="locationOptions"
-          :selectedValue="activeLocation"
-          @update:selectedValue="handleLocationChange"
-        />
+        <template v-if="activeVenueId">
+          <span>at</span>
+          <button
+            type="button"
+            class="mr-1 flex items-center gap-2 rounded-full border-2 border-black bg-[#ffe066] px-3 py-1 font-sans text-xs uppercase tracking-[0.2em] text-[#1f1b2c] shadow-[4px_4px_0_#1f1b2c] transition-all duration-150 hover:-translate-y-0.5 hover:bg-[#ff8ba7] hover:shadow-[6px_6px_0_#f15a24] focus:outline-none focus-visible:ring-4 focus-visible:ring-[#8ec5ff]/60 sm:mr-2 sm:px-4 sm:py-1.5 sm:text-sm sm:tracking-[0.3em]"
+            :aria-label="`Showing events at ${activeVenueName}. Clear venue filter`"
+            @click="clearVenueFilter"
+          >
+            <span
+              class="max-w-[180px] truncate text-left text-xs sm:max-w-[260px] sm:text-base"
+              >{{ activeVenueName }}</span
+            >
+            <VueFeather
+              type="x"
+              size="24"
+              class="ml-1 h-3 w-3 sm:h-5 sm:w-5"
+              aria-hidden="true"
+            />
+          </button>
+        </template>
+        <template v-else>
+          <span>in</span>
+          <DropdownSelector
+            class="text-xs sm:text-lg md:text-xl mr-1 sm:mr-2"
+            :options="locationOptions"
+            :selectedValue="activeLocation"
+            @update:selectedValue="handleLocationChange"
+          />
+        </template>
         <span class="hidden sm:inline">!</span>
       </h3>
       <p

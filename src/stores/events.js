@@ -4,7 +4,9 @@ import {
 	getDateRanges,
 	checkDateOverlap,
 	getCheckpointTimestamp,
+	resolveVenueId,
 } from "@/utils.js";
+import { useStarredVenuesStore } from "@/stores/starredVenues.js";
 
 let timeout_fakeLoading;
 
@@ -15,6 +17,9 @@ export const useEventsStore = defineStore("events", {
 		regions: [],
 		sources: [],
 		generationTime: null,
+		venues: [],
+		/** @type {Object<string, string>} merged/retired venue ID -> surviving venue ID */
+		venueRedirects: {},
 		/** @type {'idle' | 'fetching' | 'success', 'error'} */
 		fetchEventsStatus: "idle",
 		/** @type {string || null} */
@@ -34,6 +39,53 @@ export const useEventsStore = defineStore("events", {
 				});
 			};
 		},
+		venuesById: (state) => {
+			const map = new Map();
+			for (const venue of state.venues) {
+				if (venue?.id) {
+					map.set(venue.id, venue);
+				}
+			}
+			return map;
+		},
+		resolveVenueId: (state) => {
+			return (venueId) => resolveVenueId(venueId, state.venueRedirects);
+		},
+		/** Number of loaded events listing each venue ID (counted once per event). */
+		eventCountsByVenueId: (state) => {
+			const counts = new Map();
+			for (const item of state.items) {
+				const venueIds = new Set(
+					(item.locations || [])
+						.map((location) => location?.venue_id)
+						.filter(Boolean)
+				);
+				for (const venueId of venueIds) {
+					counts.set(venueId, (counts.get(venueId) || 0) + 1);
+				}
+			}
+			return counts;
+		},
+		/** Best known display name for a venue: venues.json, then any event location. */
+		getVenueName() {
+			return (venueId) => {
+				if (!venueId) {
+					return null;
+				}
+				const venue = this.venuesById.get(venueId);
+				if (venue?.name) {
+					return venue.name;
+				}
+				for (const item of this.items) {
+					for (const location of item.locations || []) {
+						if (location?.venue_id === venueId) {
+							return location.venue_name || location.name || null;
+						}
+					}
+				}
+				return null;
+			};
+		},
 		getSourcesData: (state) => {
 			return (sourcesIndex) => {
 				return sourcesIndex.map((index) => state.sources[index]);
@@ -49,6 +101,9 @@ export const useEventsStore = defineStore("events", {
 				// set checkpoint timestamp (the data is refreshed at certain timings)
 				const timestamp = getCheckpointTimestamp();
 
+				// get venues in parallel (optional: never blocks or fails the main load)
+				const venuesPromise = this.fetchVenues(DATA_URL, timestamp);
+
 				// get events
 				const eventsUrl = `${DATA_URL}/events.json?${timestamp}`;
 				const eventsResponse = await fetch(eventsUrl);
@@ -56,6 +111,7 @@ export const useEventsStore = defineStore("events", {
 					throw new Error(`HTTP error! Status: ${eventsResponse.status}`);
 				}
 				const eventsData = await eventsResponse.json();
+				await venuesPromise;
 
 				const allCategories = new Set();
 				const allRegions = new Set();
@@ -73,6 +129,9 @@ export const useEventsStore = defineStore("events", {
 						if (regionName) {
 							allRegions.add(regionName);
 						}
+						// normalise venue IDs so merged/retired venues map to their surviving ID
+						location.venue_id = this.resolveVenueId(location.venue_id);
+						location.venue_name = location.venue_name || null;
 					}
 					if (!item.location) {
 						const primaryLocation = normalizedLocations[0];
@@ -120,6 +179,34 @@ export const useEventsStore = defineStore("events", {
 				this.fetchEventsStatus = "error";
 				throw error; // re-throw the error for caller to handle
 			}
+		},
+		async fetchVenues(DATA_URL, timestamp) {
+			try {
+				const venuesUrl = `${DATA_URL}/venues.json?${timestamp}`;
+				const venuesResponse = await fetch(venuesUrl);
+				if (!venuesResponse.ok) {
+					throw new Error(`HTTP error! Status: ${venuesResponse.status}`);
+				}
+				const venuesData = await venuesResponse.json();
+				this.venues = Array.isArray(venuesData?.venues)
+					? venuesData.venues.filter((venue) => venue && venue.id)
+					: [];
+				this.venueRedirects =
+					venuesData?.redirects && typeof venuesData.redirects === "object"
+						? venuesData.redirects
+						: {};
+			} catch (error) {
+				console.warn("Venues data unavailable, continuing without it:", error);
+				this.venues = [];
+				this.venueRedirects = {};
+			}
+
+			// keep starred venues pointing at surviving venue IDs
+			const starredVenues = useStarredVenuesStore();
+			starredVenues.applyRedirects(
+				this.venueRedirects,
+				(venueId) => this.venuesById.get(venueId)?.name || null
+			);
 		},
 		triggerFakeLoading() {
 			clearTimeout(timeout_fakeLoading);
