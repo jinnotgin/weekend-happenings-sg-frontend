@@ -62,6 +62,9 @@ function handleOverlayBackToTop() {
 
 const events = useEventsStore();
 const starredVenues = useStarredVenuesStore();
+const handleSavedVenueStorage = (event) => starredVenues.handleStorageChange(event);
+onMounted(() => window.addEventListener("storage", handleSavedVenueStorage));
+onBeforeUnmount(() => window.removeEventListener("storage", handleSavedVenueStorage));
 onMounted(() => {
   if (
     events.fetchEventsStatus === "idle" ||

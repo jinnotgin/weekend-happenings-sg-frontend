@@ -12,6 +12,7 @@ let useEventsStore;
 let useStarredVenuesStore;
 let SavedVenuesView;
 let pinia;
+let storage;
 
 before(async () => {
   globalThis.window = { localStorage: { getItem: () => null, setItem() {} } };
@@ -27,7 +28,15 @@ before(async () => {
   ({ default: SavedVenuesView } = await server.ssrLoadModule('/src/views/SavedVenuesView.vue'));
 });
 after(async () => { await server?.close(); delete globalThis.window; });
-beforeEach(() => { pinia = createPinia(); setActivePinia(pinia); });
+beforeEach(() => {
+  storage = new Map();
+  window.localStorage = {
+    getItem: (key) => storage.get(key) ?? null,
+    setItem: (key, value) => storage.set(key, value),
+  };
+  pinia = createPinia();
+  setActivePinia(pinia);
+});
 
 const fixture = () => ({ title: 'Event', category: [], locations: [{ venue_id: 'old' }] });
 const response = (data) => ({ ok: true, json: async () => data });
@@ -204,4 +213,112 @@ test('retry action handles failure and can recover to real counts', async (t) =>
   assert.equal(events.fetchEventsStatus, 'success');
   assert.equal(events.eventCountsByVenueId.get('old'), 1);
   assert.match(await renderSaved(), /1 event/);
+});
+
+const savedKey = 'nowinsg:starredVenues:v1';
+const savedIds = () => JSON.parse(storage.get(savedKey) || '[]').map(({ id }) => id).sort();
+const storageEvent = (store, key = savedKey) => store.handleStorageChange({ key, storageArea: window.localStorage });
+
+test('filter animations preserve errors and pending network requests', async (t) => {
+  useStarredVenuesStore().star('old', 'Saved');
+  const events = useEventsStore();
+  let finishAnimation;
+  t.mock.method(globalThis, 'setTimeout', (callback) => { finishAnimation = callback; return 1; });
+  t.mock.method(globalThis, 'clearTimeout', () => {});
+  events.fetchEventsStatus = 'error';
+  events.triggerFakeLoading();
+  assert.equal(finishAnimation, undefined);
+  assert.equal(events.displayEventsStatus, 'error');
+  assert.match(await renderSaved(), /Retry/);
+  assert.doesNotMatch(await renderSaved(), /No events listed right now/);
+  events.fetchEventsStatus = 'success';
+  events.triggerFakeLoading();
+  assert.equal(events.fetchEventsStatus, 'success');
+  assert.equal(events.displayEventsStatus, 'fetching');
+  events.fetchEventsStatus = 'fetching';
+  finishAnimation();
+  assert.equal(events.fetchEventsStatus, 'fetching');
+  assert.equal(events.displayEventsStatus, 'fetching');
+  events.fetchEventsStatus = 'success';
+  events.triggerFakeLoading();
+  events.fetchEventsStatus = 'error';
+  finishAnimation();
+  assert.equal(events.displayEventsStatus, 'error');
+  assert.match(await renderSaved(), /Retry/);
+});
+
+test('two tabs retain independent saves and removals before storage events arrive', () => {
+  const a = useStarredVenuesStore(createPinia());
+  const b = useStarredVenuesStore(createPinia());
+  a.star('a', 'A');
+  b.star('b', 'B');
+  assert.deepEqual(savedIds(), ['a', 'b']);
+  a.unstar('a');
+  b.star('c', 'C');
+  assert.deepEqual(savedIds(), ['b', 'c']);
+  storageEvent(a);
+  assert.deepEqual([...a.starredIds].sort(), ['b', 'c']);
+  b.unstar('c');
+  storageEvent(a);
+  assert.deepEqual([...a.starredIds], ['b']);
+});
+
+test('storage notifications use the latest snapshot, honor clear, and ignore other keys', () => {
+  const a = useStarredVenuesStore();
+  a.star('a', 'A');
+  const b = useStarredVenuesStore(createPinia());
+  b.unstar('a');
+  a.handleStorageChange({ key: savedKey, newValue: JSON.stringify([{ id: 'a' }]) });
+  assert.equal(a.count, 0);
+  a.star('b', 'B');
+  storage.delete(savedKey);
+  storageEvent(a, 'unrelated');
+  assert.equal(a.count, 1);
+  storageEvent(a, null);
+  assert.equal(a.count, 0);
+});
+
+test('redirect migrations reconcile other tabs and normalize later incoming IDs', () => {
+  const a = useStarredVenuesStore();
+  const b = useStarredVenuesStore(createPinia());
+  a.star('old', 'Old');
+  b.star('other', 'Other');
+  a.applyRedirects({ old: 'current' }, (id) => id === 'current' ? 'Current' : null);
+  assert.deepEqual(savedIds(), ['current', 'other']);
+  b.unstar('other');
+  // A second tab with old metadata can write old IDs; the first must canonicalize them.
+  b.star('old', 'Old');
+  storageEvent(a);
+  assert.deepEqual([...a.starredIds], ['current']);
+  a.unstar('old');
+  assert.deepEqual(savedIds(), []);
+});
+
+test('failed writes remain local and replay over other tabs without resurrecting removals', (t) => {
+  const a = useStarredVenuesStore();
+  a.star('a', 'A');
+  const b = useStarredVenuesStore(createPinia());
+  t.mock.method(console, 'warn', () => {});
+  const writer = t.mock.method(window.localStorage, 'setItem', () => { throw new Error('quota'); });
+  a.unstar('a');
+  a.star('b', 'B');
+  assert.deepEqual([...a.starredIds], ['b']);
+  writer.mock.restore();
+  b.star('c', 'C');
+  storageEvent(a);
+  assert.deepEqual([...a.starredIds].sort(), ['b', 'c']);
+  a.star('d', 'D');
+  assert.deepEqual(savedIds(), ['b', 'c', 'd']);
+});
+
+test('malformed or unreadable storage keeps local saves usable', (t) => {
+  const a = useStarredVenuesStore();
+  a.star('a', 'A');
+  t.mock.method(console, 'warn', () => {});
+  storage.set(savedKey, '{');
+  storageEvent(a);
+  assert.equal(a.isStarred('a'), true);
+  t.mock.method(window.localStorage, 'getItem', () => { throw new Error('denied'); });
+  a.star('b', 'B');
+  assert.deepEqual([...a.starredIds].sort(), ['a', 'b']);
 });

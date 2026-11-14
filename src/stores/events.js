@@ -11,7 +11,7 @@ import { useStarredVenuesStore } from "@/stores/starredVenues.js";
 const VENUES_FETCH_TIMEOUT_MS = 15000;
 const venueRequests = new WeakMap();
 
-let timeout_fakeLoading;
+const filterLoadingTimers = new WeakMap();
 
 export const useEventsStore = defineStore("events", {
 	state: () => ({
@@ -25,10 +25,15 @@ export const useEventsStore = defineStore("events", {
 		venueRedirects: {},
 		/** @type {'idle' | 'fetching' | 'success', 'error'} */
 		fetchEventsStatus: "idle",
+		isFilterLoading: false,
 		/** @type {string || null} */
 		lastFetchEventsTime: null,
 	}),
 	getters: {
+		displayEventsStatus: (state) =>
+			state.fetchEventsStatus === "success" && state.isFilterLoading
+				? "fetching"
+				: state.fetchEventsStatus,
 		getItemsInDateRangeAndCategory: (state) => {
 			return (dateRangeKey, categoryKey) => {
 				const dateRanges = getDateRanges();
@@ -236,11 +241,13 @@ export const useEventsStore = defineStore("events", {
 			}
 		},
 		triggerFakeLoading() {
-			clearTimeout(timeout_fakeLoading);
-			this.fetchEventsStatus = "fetching";
-			timeout_fakeLoading = setTimeout(() => {
-				this.fetchEventsStatus = "success";
-			}, 600);
+			if (this.fetchEventsStatus !== "success") return;
+			clearTimeout(filterLoadingTimers.get(this));
+			this.isFilterLoading = true;
+			filterLoadingTimers.set(this, setTimeout(() => {
+				this.isFilterLoading = false;
+				filterLoadingTimers.delete(this);
+			}, 600));
 		},
 	},
 });

@@ -759,17 +759,17 @@ onBeforeUnmount(() => {
 <template>
 	<main class="flex flex-col gap-8 px-0">
 		<div class="mx-auto flex w-full scale-125 flex-col items-center bg-white/85 backdrop-blur pb-14 sm:pb-28"
-			v-if="events.fetchEventsStatus !== 'success'">
+			v-if="events.displayEventsStatus !== 'success'">
 			<!-- hack: using scale-125 to combat the popping issue-->
-			<div class="flex w-full flex-col items-center gap-6" v-show="events.fetchEventsStatus === 'idle' ||
-				events.fetchEventsStatus === 'fetching'
+			<div class="flex w-full flex-col items-center gap-6" v-show="events.displayEventsStatus === 'idle' ||
+				events.displayEventsStatus === 'fetching'
 				">
 				<!-- hack: due to using scale-125, we will begin with "p" and end with "Scoo" (rather than end with "Scoop")-->
 				<!-- CurveLoop component has a hack as well due to this, refer to the component to see more -->
 				<CurvedLoop marquee-text="p ✦ Buzz ✦ Scoo" text-class="font-sans uppercase tracking-[0.35em]" :speed="3.5"
 					:curve-amount="400" :interactive="false" />
 			</div>
-			<div v-show="events.fetchEventsStatus === 'error'"
+			<div v-show="events.displayEventsStatus === 'error'"
 				class="mx-auto w-full max-w-6xl rounded-[32px] border-4 border-black bg-[#ff8ba7]/20 px-4 py-8 text-center font-sans shadow-[8px_8px_0_#1f1b2c] backdrop-blur sm:px-8 sm:py-10 sm:shadow-[16px_16px_0_#f15a24]">
 				<p class="text-base font-semibold text-[#1f1b2c] sm:text-2xl">
 					There was an error loading this page.
@@ -779,7 +779,7 @@ onBeforeUnmount(() => {
 				</p>
 			</div>
 		</div>
-		<div v-show="events.fetchEventsStatus === 'success'" class="flex flex-col gap-6 pb-6 lg:gap-8">
+		<div v-show="events.displayEventsStatus === 'success'" class="flex flex-col gap-6 pb-6 lg:gap-8">
 			<div v-if="filteredEvents.length > 0" class="mx-auto max-w-4xl text-center">
 				<p class="font-sans text-xs sm:text-sm uppercase tracking-[0.4em] text-[#1f1b2c]/70">
 					Information may be imperfect - double check first!
