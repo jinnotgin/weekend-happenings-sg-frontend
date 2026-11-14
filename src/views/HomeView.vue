@@ -896,6 +896,13 @@ onBeforeUnmount(() => {
 										<p class="mt-2 font-serif text-base text-[#1f1b2c] sm:text-lg">
 											{{ event.datetime }}
 										</p>
+										<template v-if="event.opening_hours">
+											<p
+												v-for="(line, i) in event.opening_hours.split('\n')"
+												:key="i"
+												class="mt-1 font-sans text-sm text-[#1f1b2c]/80"
+											>{{ line }}</p>
+										</template>
 									</div>
 									<div
 										class="rounded-2xl border-2 border-dashed border-[#1f1b2c]/40 bg-[#8ec5ff]/20 px-3 py-2.5 sm:px-4 sm:py-3">
