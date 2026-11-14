@@ -8,6 +8,9 @@ import {
 } from "@/utils.js";
 import { useStarredVenuesStore } from "@/stores/starredVenues.js";
 
+const VENUES_FETCH_TIMEOUT_MS = 15000;
+const venueRequests = new WeakMap();
+
 let timeout_fakeLoading;
 
 export const useEventsStore = defineStore("events", {
@@ -102,7 +105,9 @@ export const useEventsStore = defineStore("events", {
 				const timestamp = getCheckpointTimestamp();
 
 				// get venues in parallel (optional: never blocks or fails the main load)
-				const venuesPromise = this.fetchVenues(DATA_URL, timestamp);
+				void this.fetchVenues(DATA_URL, timestamp).catch((error) => {
+					console.warn("Optional venue refresh failed:", error);
+				});
 
 				// get events
 				const eventsUrl = `${DATA_URL}/events.json?${timestamp}`;
@@ -111,7 +116,6 @@ export const useEventsStore = defineStore("events", {
 					throw new Error(`HTTP error! Status: ${eventsResponse.status}`);
 				}
 				const eventsData = await eventsResponse.json();
-				await venuesPromise;
 
 				const allCategories = new Set();
 				const allRegions = new Set();
@@ -181,13 +185,29 @@ export const useEventsStore = defineStore("events", {
 			}
 		},
 		async fetchVenues(DATA_URL, timestamp) {
+			venueRequests.get(this)?.abort();
+			const controller = new AbortController();
+			venueRequests.set(this, controller);
+			let timeout;
 			try {
 				const venuesUrl = `${DATA_URL}/venues.json?${timestamp}`;
-				const venuesResponse = await fetch(venuesUrl);
-				if (!venuesResponse.ok) {
-					throw new Error(`HTTP error! Status: ${venuesResponse.status}`);
-				}
-				const venuesData = await venuesResponse.json();
+				// Bound the background response and its body, and cancel stalled work.
+				const request = async () => {
+					const response = await fetch(venuesUrl, { signal: controller.signal });
+					if (!response.ok) {
+						throw new Error(`HTTP error! Status: ${response.status}`);
+					}
+					return response.json();
+				};
+				const deadline = new Promise((_, reject) => {
+					timeout = setTimeout(() => {
+						reject(new Error("Venues request timed out"));
+						controller.abort();
+					}, VENUES_FETCH_TIMEOUT_MS);
+				});
+				const venuesData = await Promise.race([request(), deadline]);
+				// A newer refresh owns the registry, even if this endpoint ignored abort.
+				if (venueRequests.get(this) !== controller) return;
 				this.venues = Array.isArray(venuesData?.venues)
 					? venuesData.venues.filter((venue) => venue && venue.id)
 					: [];
@@ -195,18 +215,25 @@ export const useEventsStore = defineStore("events", {
 					venuesData?.redirects && typeof venuesData.redirects === "object"
 						? venuesData.redirects
 						: {};
+				// Events can already be visible when the background metadata arrives.
+				for (const item of this.items) {
+					for (const location of item.locations || []) {
+						location.venue_id = this.resolveVenueId(location.venue_id);
+					}
+				}
+				const starredVenues = useStarredVenuesStore();
+				starredVenues.applyRedirects(
+					this.venueRedirects,
+					(venueId) => this.venuesById.get(venueId)?.name || null
+				);
 			} catch (error) {
-				console.warn("Venues data unavailable, continuing without it:", error);
-				this.venues = [];
-				this.venueRedirects = {};
+				if (venueRequests.get(this) === controller) {
+					console.warn("Venues data unavailable, using last known venues:", error);
+				}
+			} finally {
+				clearTimeout(timeout);
+				if (venueRequests.get(this) === controller) venueRequests.delete(this);
 			}
-
-			// keep starred venues pointing at surviving venue IDs
-			const starredVenues = useStarredVenuesStore();
-			starredVenues.applyRedirects(
-				this.venueRedirects,
-				(venueId) => this.venuesById.get(venueId)?.name || null
-			);
 		},
 		triggerFakeLoading() {
 			clearTimeout(timeout_fakeLoading);

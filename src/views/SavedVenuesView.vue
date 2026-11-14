@@ -17,6 +17,14 @@ const isLoadingEvents = computed(() => {
 	);
 });
 
+async function retryFetchEvents() {
+	try {
+		await events.fetchEvents();
+	} catch {
+		// The store exposes the failure below and keeps the retry available.
+	}
+}
+
 // fallback details from this week's event locations, for venues missing in venues.json
 const findEventLocationForVenue = (venueId) => {
 	for (const item of events.items) {
@@ -77,7 +85,16 @@ const savedVenues = computed(() => {
 			</RouterLink>
 		</div>
 
-		<ul v-else class="grid gap-4 sm:grid-cols-2">
+		<div v-if="events.fetchEventsStatus === 'error'" role="alert"
+			class="rounded-2xl border-2 border-[#f15a24] bg-[#ffe066]/30 px-4 py-4 text-sm">
+			<p>We couldn't check events right now. Try again to see what's on at your saved venues.</p>
+			<button type="button" @click="retryFetchEvents"
+				class="mt-3 rounded-full border-2 border-black bg-[#ffe066] px-4 py-2 text-xs font-semibold uppercase tracking-[0.2em] shadow-[4px_4px_0_#1f1b2c] focus-visible:ring-4 focus-visible:ring-[#8ec5ff]/60">
+				Retry
+			</button>
+		</div>
+
+		<ul v-if="savedVenues.length" class="grid gap-4 sm:grid-cols-2">
 			<li v-for="venue in savedVenues" :key="venue.id"
 				class="flex items-start gap-3 rounded-2xl border-2 border-dashed border-[#1f1b2c]/40 bg-[#8ec5ff]/20 px-3 py-3 sm:px-4 sm:py-4">
 				<RouterLink :to="{ path: '/', query: { venue: venue.id } }"
@@ -91,7 +108,8 @@ const savedVenues = computed(() => {
 					</span>
 					<span class="mt-1 text-xs uppercase tracking-[0.2em]"
 						:class="venue.eventCount ? 'text-[#f15a24]' : 'text-[#1f1b2c]/60'">
-						<template v-if="isLoadingEvents">Checking events…</template>
+						<template v-if="events.fetchEventsStatus === 'error'">Event counts unavailable</template>
+						<template v-else-if="isLoadingEvents">Checking events…</template>
 						<template v-else-if="venue.eventCount">
 							{{ venue.eventCount }} event<span v-if="venue.eventCount > 1">s</span> listed
 						</template>
