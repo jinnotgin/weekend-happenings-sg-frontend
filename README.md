@@ -8,7 +8,8 @@ This repository contains the Vue 3 single-page application that renders the publ
 
 - **Curated events feed** – Automatically refreshed listings grouped by date range, category, and region so you can jump straight to what matters most.
 - **Location-savvy browsing** – Optional "Near me" filters use lightweight geolocation to spotlight happenings within ~10 km of the visitor.
-- **Source transparency** – Every event links back to its original source, with attribution surfaced in the UI so readers can explore further.
+- **Saved venues** – Star a venue from an event, browse the `/saved` page, and filter the feed to saved venues or a single venue. Saves are stored in this browser and synchronized across its open tabs; they do not sync across browsers or devices.
+- **Source transparency** – Source attribution is surfaced in the UI, alongside event links resolved by the upstream pipeline when available.
 - **AI-assisted summaries** – Event copy, categories, and highlights are distilled with the help of large language models, keeping descriptions succinct while retaining key details.
 - **Responsive experience** – Built with Tailwind CSS and layout primitives tailored to phone-first exploration, while still feeling delightful on tablets and desktops.
 
@@ -16,8 +17,8 @@ This repository contains the Vue 3 single-page application that renders the publ
 
 - [Vue 3](https://vuejs.org/) with the `<script setup>` composition API
 - [Vite](https://vitejs.dev/) for lightning-fast development and builds
-- [Pinia](https://pinia.vuejs.org/) for state management of events, categories, and filters
-- [Vue Router](https://router.vuejs.org/) for client-side navigation between the main feed and informational pages
+- [Pinia](https://pinia.vuejs.org/) for state management of events, venue metadata, saved venues, and loading state
+- [Vue Router](https://router.vuejs.org/) for client-side navigation between the main feed, saved venues, and informational pages
 - [Tailwind CSS](https://tailwindcss.com/) and Floating Vue for styling and popovers
 
 ## Data Flow
@@ -27,5 +28,27 @@ Event, location, and attribution data is generated upstream and published to `ht
 - `events.json` – Normalised event documents with categories, date ranges, and resolved thumbnails
 - `sources.json` – Metadata about each curated source, surfaced inside the "Sources" drawer
 - `generationTime.json` – Timestamp indicating when the dataset was last refreshed, shown to visitors
+- `venues.json` – Optional venue registry with display details and redirects from merged IDs to their surviving IDs
 
 See [`src/stores/events.js`](src/stores/events.js) for the Pinia store responsible for fetching and shaping this data.
+
+Venue metadata loads in the background with a 15-second timeout covering the response and JSON body. The feed can display before it arrives. Successful metadata loads normalize event and saved-venue IDs through the redirects; failures preserve any venue metadata already loaded in the current session.
+
+## Saved venues
+
+The star controls use the stable `locations[].venue_id` values supplied by the pipeline. Listings without a venue ID remain browsable but cannot be saved as venues. Saved entries live in `localStorage` under `nowinsg:starredVenues:v1`; clearing this site's browser storage removes them.
+
+The `/saved` page shows venue details and counts from the loaded event dataset. It distinguishes failed event loads from confirmed zero counts and offers Retry after a failure. Selecting a saved venue opens the feed with `?venue=<id>`; date and category filters still apply. The location selector also offers a saved-venues filter.
+
+See [`src/stores/starredVenues.js`](src/stores/starredVenues.js) for persistence, cross-tab reconciliation, and merged-ID handling.
+
+## Validation
+
+With dependencies installed, use Node.js 24 (matching the companion pipeline) to run:
+
+```bash
+npm test
+npm run build
+```
+
+Tests exercise the stores and saved-venues view with mocked fetch/localStorage behavior, covering background venue loading, redirects, error recovery, filter-loading state, and cross-tab saves. The production build writes to `dist/`.
