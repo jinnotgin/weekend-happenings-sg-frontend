@@ -907,7 +907,7 @@ async function retryFetchEvents() {
 											<p
 												v-for="(line, i) in event.opening_hours.split('\n')"
 												:key="i"
-												class="mt-1 font-sans text-sm text-[#1f1b2c]/80"
+												class="mt-1 font-sans text-xs text-[#1f1b2c]/80"
 											>{{ line }}</p>
 										</template>
 									</div>
