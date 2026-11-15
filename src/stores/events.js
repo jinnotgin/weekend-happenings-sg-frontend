@@ -6,7 +6,7 @@ import {
 	getCheckpointTimestamp,
 	resolveVenueId,
 } from "@/utils.js";
-import { useStarredVenuesStore } from "@/stores/starredVenues.js";
+import { useSavedEventsStore } from "@/stores/savedEvents.js";
 
 const VENUES_FETCH_TIMEOUT_MS = 15000;
 const venueRequests = new WeakMap();
@@ -179,6 +179,7 @@ export const useEventsStore = defineStore("events", {
 				const generationTimeData = await generationTimeResponse.json();
 				this.generationTime = generationTimeData;
 
+				useSavedEventsStore().refreshSnapshots(this.items);
 				this.fetchEventsStatus = "success";
 				this.lastFetchEventsTime = new Date().toISOString();
 
@@ -226,11 +227,6 @@ export const useEventsStore = defineStore("events", {
 						location.venue_id = this.resolveVenueId(location.venue_id);
 					}
 				}
-				const starredVenues = useStarredVenuesStore();
-				starredVenues.applyRedirects(
-					this.venueRedirects,
-					(venueId) => this.venuesById.get(venueId)?.name || null
-				);
 			} catch (error) {
 				if (venueRequests.get(this) === controller) {
 					console.warn("Venues data unavailable, using last known venues:", error);

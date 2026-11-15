@@ -9,15 +9,15 @@ import {
 } from "vue";
 import { RouterLink, useRoute, useRouter } from "vue-router";
 import { useEventsStore } from "@/stores/events.js";
-import { useStarredVenuesStore } from "@/stores/starredVenues.js";
-import { calculateDistanceKm, isWithinLastDays } from "@/utils.js";
+import { useSavedEventsStore } from "@/stores/savedEvents.js";
+import { calculateDistanceKm, isWithinLastDays, getDateRanges, checkDateOverlap } from "@/utils.js";
 import VueFeather from "vue-feather";
 import CurvedLoop from "@/components/CurvedLoop.vue";
 import NavigationPill from "@/components/NavigationPill.vue";
-import StarVenueButton from "@/components/StarVenueButton.vue";
+import SaveButton from "@/components/SaveButton.vue";
 
 const events = useEventsStore();
-const starredVenues = useStarredVenuesStore();
+const savedEvents = useSavedEventsStore();
 const route = useRoute();
 const router = useRouter();
 const props = defineProps({
@@ -245,13 +245,12 @@ const activeVenueName = computed(() => {
 	}
 	return (
 		events.getVenueName(activeVenueId.value) ||
-		starredVenues.items.find(({ id }) => id === activeVenueId.value)?.name ||
 		"this venue"
 	);
 });
 
-const isStarredFilterActive = computed(() => {
-	return !activeVenueId.value && props.activeLocation === "starred";
+const isSavedFilterActive = computed(() => {
+	return route.path === "/saved";
 });
 
 // events at the selected venue regardless of date / category, to hint at other periods
@@ -305,11 +304,6 @@ const filteredEvents = computed(() => {
 			return true;
 		}
 
-		if (props.activeLocation === "starred") {
-			return getEventVenueIds(event).some((venueId) =>
-				starredVenues.isStarred(venueId)
-			);
-		}
 
 		if (props.activeLocation === "nearMe") {
 			if (props.locationStatus !== "ready" || !props.userLocation) {
@@ -351,10 +345,15 @@ const filteredEvents = computed(() => {
 		return regions.includes(targetRegion);
 	};
 
-	return events
-		.getItemsInDateRangeAndCategory(
-			props.activeTimeRange,
-			props.activeCategory
+	const currentById = new Map(events.items.filter((event) => event.id).map((event) => [event.id, event]));
+	const candidates = isSavedFilterActive.value
+		? savedEvents.list.map(({ id, event }) => currentById.get(id) || { ...event, source: [], isSavedCopy: true })
+		: events.items;
+	const targetDateRange = getDateRanges()[props.activeTimeRange];
+	return candidates
+		.filter((event) =>
+			(props.activeTimeRange === "anyTime" || checkDateOverlap(event.daterange, targetDateRange)) &&
+			(props.activeCategory === "all" || event.category?.includes(props.activeCategory))
 		)
 		.filter((event) => matchesLocation(event))
 		.map((event) => ({
@@ -754,12 +753,16 @@ onBeforeUnmount(() => {
 	}
 	hasBottomEdgeSnap = false;
 });
+async function retryFetchEvents() {
+	try { await events.fetchEvents(); } catch { /* Keep the retry and saved copies available. */ }
+}
+
 </script>
 
 <template>
 	<main class="flex flex-col gap-8 px-0">
 		<div class="mx-auto flex w-full scale-125 flex-col items-center bg-white/85 backdrop-blur pb-14 sm:pb-28"
-			v-if="events.displayEventsStatus !== 'success'">
+			v-if="!isSavedFilterActive && events.displayEventsStatus !== 'success'">
 			<!-- hack: using scale-125 to combat the popping issue-->
 			<div class="flex w-full flex-col items-center gap-6" v-show="events.displayEventsStatus === 'idle' ||
 				events.displayEventsStatus === 'fetching'
@@ -779,7 +782,13 @@ onBeforeUnmount(() => {
 				</p>
 			</div>
 		</div>
-		<div v-show="events.displayEventsStatus === 'success'" class="flex flex-col gap-6 pb-6 lg:gap-8">
+		<div v-show="isSavedFilterActive || events.displayEventsStatus === 'success'" class="flex flex-col gap-6 pb-6 lg:gap-8">
+			<div v-if="isSavedFilterActive && events.fetchEventsStatus === 'error'" role="alert"
+				class="rounded-2xl border-2 border-[#f15a24] bg-[#ffe066]/30 px-4 py-4 font-sans text-sm">
+				<p>We couldn't check for updates. Your saved copies are still available.</p>
+				<button type="button" @click="retryFetchEvents" class="mt-3 rounded-full border-2 border-black bg-[#ffe066] px-4 py-2 font-semibold focus-visible:ring-4 focus-visible:ring-[#8ec5ff]/60">Retry</button>
+			</div>
+			<p v-else-if="isSavedFilterActive && (events.fetchEventsStatus === 'idle' || events.fetchEventsStatus === 'fetching')" class="text-center font-sans text-sm">Checking for updates…</p>
 			<div v-if="filteredEvents.length > 0" class="mx-auto max-w-4xl text-center">
 				<p class="font-sans text-xs sm:text-sm uppercase tracking-[0.4em] text-[#1f1b2c]/70">
 					Information may be imperfect - double check first!
@@ -808,24 +817,24 @@ onBeforeUnmount(() => {
 						Show all venues
 					</button>
 				</template>
-				<template v-else-if="isStarredFilterActive && starredVenues.count === 0">
-					<p>You haven't saved any venues yet. ⭐</p>
+				<template v-else-if="isSavedFilterActive && savedEvents.count === 0">
+					<p>You haven't saved anything yet. ⭐</p>
 					<p class="mt-3 text-[#1f1b2c]/80">
 						Tap the
 						<vue-feather type="star" class="inline-block h-4 w-4 align-[-2px]" aria-hidden="true" />
 						<span class="sr-only">star</span>
-						next to a venue's name on any event to save it. Events at your saved venues will show up here.
+						on an event to save it here.
 					</p>
 					<p class="mt-4 text-xs uppercase tracking-[0.3em] text-[#f15a24] sm:text-sm">
-						Pick another area above to browse events!
+						Turn off Saved above to browse events.
 					</p>
 				</template>
-				<template v-else-if="isStarredFilterActive">
-					<p>None of your saved venues have events for this category / time period.</p>
+				<template v-else-if="isSavedFilterActive">
+					<p>No saved events match these filters.</p>
 					<p class="mt-4 text-xs uppercase tracking-[0.3em] text-[#f15a24] sm:text-sm">
 						Try widening your filters, or
-						<RouterLink to="/saved" class="underline decoration-2 underline-offset-4 hover:text-[#1f1b2c]">
-							see your saved venues</RouterLink>.
+						<RouterLink to="/" class="underline decoration-2 underline-offset-4 hover:text-[#1f1b2c]">
+							browse all events</RouterLink>.
 					</p>
 				</template>
 				<template v-else>
@@ -836,7 +845,7 @@ onBeforeUnmount(() => {
 				</template>
 			</div>
 			<ul class="flex flex-col gap-8" v-show="filteredEvents.length > 0" ref="eventListRef">
-				<li v-for="(event, index) in filteredEvents" :key="index" class="transition-transform duration-200"
+				<li v-for="(event, index) in filteredEvents" :key="event.id || index" class="transition-transform duration-200"
 					data-event-card :data-event-index="index">
 					<div
 						class="group relative bg-white/80 overflow-hidden rounded-[32px] border-4 border-black bg-white/85 px-4 py-5 shadow-[8px_8px_0_#1f1b2c] backdrop-blur transition-all duration-200 sm:px-8 sm:py-8 lg:hover:-translate-y-1 lg:hover:shadow-[16px_16px_0_#f15a24]">
@@ -845,6 +854,7 @@ onBeforeUnmount(() => {
 						</div>
 						<div class="relative z-10 flex flex-col-reverse gap-6 lg:flex-row lg:items-start lg:gap-10">
 							<div class="flex flex-1 flex-col gap-5">
+								<p v-if="event.isSavedCopy && events.fetchEventsStatus === 'success'" class="font-sans text-xs text-[#1f1b2c]/70">Not in the current listings. Showing your saved copy.</p>
 								<div class="flex items-start gap-3 sm:gap-4">
 									<a :href="event.link" target="_blank" rel="noopener"
 										class="min-w-0 flex-1 text-xl font-bold leading-tight text-[#1f1b2c] underline-offset-8 transition-colors hover:text-[#f15a24] hover:underline sm:text-3xl">
@@ -855,11 +865,8 @@ onBeforeUnmount(() => {
 											event.title }}</span>
 									</a>
 									<div class="ml-auto flex items-start gap-2">
-										<a :href="event.link" target="_blank" rel="noopener" aria-label="Open event in a new tab"
-											class="flex h-8 w-8 items-center justify-center rounded-full border-2 border-[#1f1b2c] bg-white text-[#f15a24] shadow-[4px_4px_0_#1f1b2c] transition-all hover:-translate-y-0.5 hover:shadow-[6px_6px_0_#f15a24] sm:h-9 sm:w-9">
-											<vue-feather type="arrow-up-right" class="h-4 w-4 sm:h-5 sm:w-5" />
-										</a>
-										<VMenu class="inline-flex">
+										<SaveButton :event="event" />
+										<VMenu v-if="event.source?.length" class="inline-flex">
 											<button type="button"
 												class="flex h-8 w-8 items-center justify-center rounded-full border-2 border-[#1f1b2c] bg-white text-[#1f1b2c] shadow-[4px_4px_0_#1f1b2c] transition-all hover:-translate-y-0.5 hover:shadow-[6px_6px_0_#f15a24] sm:h-9 sm:w-9">
 												<vue-feather type="info" class="h-4 w-4 sm:h-5 sm:w-5" />
@@ -924,7 +931,7 @@ onBeforeUnmount(() => {
 													</p>
 												</div>
 												<!-- stack icons vertically while the location column is narrow -->
-												<div v-if="event.locationSummary.mapUrl || event.locationSummary.venueId"
+												<div v-if="event.locationSummary.mapUrl"
 													class="flex shrink-0 items-center gap-2 sm:flex-col sm:gap-4 xl:flex-row xl:gap-2">
 													<a v-if="event.locationSummary.mapUrl" :href="event.locationSummary.mapUrl" target="_blank"
 														rel="noopener"
@@ -933,9 +940,6 @@ onBeforeUnmount(() => {
 														<span class="sr-only">Open
 															map</span>
 													</a>
-													<StarVenueButton v-if="event.locationSummary.venueId"
-														:venue-id="event.locationSummary.venueId"
-														:venue-name="event.locationSummary.venueName" />
 												</div>
 											</div>
 											<div v-if="event.locationSummary.additionalLocations" class="flex flex-col gap-2">
@@ -978,8 +982,6 @@ onBeforeUnmount(() => {
 																			location.name
 																		}}</span>
 																</a>
-																<StarVenueButton v-if="location.venueId" :venue-id="location.venueId"
-																	:venue-name="location.venueName" />
 															</div>
 															<p v-if="location.details" class="font-sans text-xs text-[#1f1b2c]/70">
 																{{
@@ -1006,7 +1008,7 @@ onBeforeUnmount(() => {
 									</div>
 								</div>
 							</div>
-							<div class="lg:flex-none lg:w-80">
+							<div v-if="event.thumbnail" class="lg:flex-none lg:w-80">
 								<a :href="event.link" target="_blank"
 									class="block overflow-hidden rounded-[24px] border-4 border-black bg-white shadow-[8px_8px_0_#1f1b2c] transition-transform duration-200 hover:-translate-y-1 hover:shadow-[12px_12px_0_#f15a24]">
 									<img :src="event.thumbnail" :alt="event.title" class="aspect-video w-full object-cover"
@@ -1022,7 +1024,7 @@ onBeforeUnmount(() => {
 				:total-events="totalEvents" @navigator-click="handleNavigatorClick" @press-start="handlePressStart"
 				@press-end="handlePressEnd" @press-cancel="handlePressCancel" />
 			<p class="text-center font-sans text-xs sm:text-sm uppercase tracking-[0.3em] text-[#1f1b2c]/70"
-				v-show="filteredEvents.length > 0">
+				v-show="filteredEvents.length > 0 && !isSavedFilterActive">
 				Events sourced on {{ formattedGenerationDate }}.
 			</p>
 		</div>

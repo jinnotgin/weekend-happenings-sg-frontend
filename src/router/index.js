@@ -20,7 +20,7 @@ const router = createRouter({
 		{
 			path: '/saved',
 			name: 'saved',
-			component: () => import('../views/SavedVenuesView.vue')
+			component: HomeView
 		}
 	]
 })

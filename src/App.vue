@@ -3,7 +3,7 @@ import { ref, computed, onMounted, onBeforeUnmount } from "vue";
 import { RouterLink, RouterView, useRoute, useRouter } from "vue-router";
 import VueFeather from "vue-feather";
 import { useEventsStore } from "@/stores/events.js";
-import { useStarredVenuesStore } from "@/stores/starredVenues.js";
+import { useSavedEventsStore } from "@/stores/savedEvents.js";
 import DropdownSelector from "@/components/DropdownSelector.vue";
 import GlassSurface from "@/components/GlassSurface.vue";
 import overlayLogo from "@/assets/nowinsg_logo_withShadow.svg";
@@ -61,19 +61,20 @@ function handleOverlayBackToTop() {
 }
 
 const events = useEventsStore();
-const starredVenues = useStarredVenuesStore();
-const handleSavedVenueStorage = (event) => starredVenues.handleStorageChange(event);
-onMounted(() => window.addEventListener("storage", handleSavedVenueStorage));
-onBeforeUnmount(() => window.removeEventListener("storage", handleSavedVenueStorage));
+const savedEvents = useSavedEventsStore();
+const handleSavedStorage = (event) => savedEvents.handleStorageChange(event);
+onMounted(() => window.addEventListener("storage", handleSavedStorage));
+onBeforeUnmount(() => window.removeEventListener("storage", handleSavedStorage));
 onMounted(() => {
   if (
     events.fetchEventsStatus === "idle" ||
     events.fetchEventsStatus === "error"
   ) {
-    events.fetchEvents();
+    events.fetchEvents().catch(() => { /* The feed exposes the failure and retry state. */ });
   }
 });
 const timeRangeOptions = {
+  anyTime: "any time",
   thisWeek: "this week",
   thisWeekend: "this weekend",
   nextWeek: "next week",
@@ -88,7 +89,8 @@ function handleTimeRangeChange(newValue) {
 }
 
 const categoryOptions = computed(() => {
-  return ["all", ...events.categories];
+  const savedCategories = isCurrentRoute("/saved") ? savedEvents.items.flatMap(({ event }) => event.category || []) : [];
+  return ["all", ...new Set([...events.categories, ...savedCategories])];
 });
 const activeCategory = ref("all");
 function handleCategoryChange(newValue) {
@@ -108,7 +110,8 @@ const locationOptions = computed(() => {
   const options = {
     anywhere: "Singapore",
   };
-  const regions = Array.isArray(events.regions) ? events.regions : [];
+  const savedRegions = isCurrentRoute("/saved") ? savedEvents.items.flatMap(({ event }) => event.locations.map((location) => location.approximate_region).filter(Boolean)) : [];
+  const regions = [...(Array.isArray(events.regions) ? events.regions : []), ...savedRegions];
   const normalizedRegions = new Map(
     regions.map((region) => [region.toLowerCase(), region])
   );
@@ -135,12 +138,11 @@ const locationOptions = computed(() => {
   }
 
   options.nearMe = "your area";
-  options.starred = "saved venues";
 
   return options;
 });
 
-// single-venue filter (from the Saved venues page), e.g. /?venue=v_esplanade
+// single-venue filter, e.g. /?venue=v_esplanade
 const activeVenueId = computed(() => {
   const rawVenue = route.query.venue;
   const venueId = Array.isArray(rawVenue) ? rawVenue[0] : rawVenue;
@@ -152,7 +154,6 @@ const activeVenueName = computed(() => {
   }
   return (
     events.getVenueName(activeVenueId.value) ||
-    starredVenues.items.find(({ id }) => id === activeVenueId.value)?.name ||
     "this venue"
   );
 });
@@ -355,29 +356,31 @@ const currentYear = new Date().getFullYear();
         <nav
           class="flex flex-wrap justify-end gap-2 self-start sm:mt-0 sm:gap-3"
         >
-          <RouterLink to="/" v-show="!isCurrentRoute('/')">
+          <RouterLink to="/" v-if="!isCurrentRoute('/') && !isCurrentRoute('/saved')">
             <button
-              class="rounded-full border-2 border-black bg-[#ffe066] px-3 py-1 font-sans text-xs font-semibold uppercase tracking-[0.2em] text-[#1f1b2c] shadow-[4px_4px_0_#1f1b2c] transition-transform hover:-translate-y-0.5 hover:shadow-[6px_6px_0_#f15a24] sm:px-4 sm:py-2 sm:text-sm sm:tracking-widest"
+              class="rounded-full border-2 border-black bg-white px-3 py-1 font-sans text-xs font-semibold uppercase tracking-[0.2em] text-[#1f1b2c] shadow-[4px_4px_0_#1f1b2c] transition-transform hover:-translate-y-0.5 hover:shadow-[6px_6px_0_#f15a24] sm:px-4 sm:py-2 sm:text-sm sm:tracking-widest"
             >
               Home
             </button>
           </RouterLink>
-          <RouterLink to="/saved" v-show="!isCurrentRoute('/saved')">
+          <RouterLink v-if="isCurrentRoute('/') || isCurrentRoute('/saved')" :to="isCurrentRoute('/saved') ? '/' : '/saved'">
             <button
               class="flex items-center gap-1.5 rounded-full border-2 border-black bg-white px-2 py-1 font-sans text-xs font-semibold uppercase tracking-[0.2em] text-[#1f1b2c] shadow-[4px_4px_0_#1f1b2c] transition-transform hover:-translate-y-0.5 hover:bg-[#ffe066] hover:shadow-[6px_6px_0_#f15a24] sm:px-4 sm:py-2 sm:text-sm sm:tracking-widest"
-              :aria-label="`Saved venues (${starredVenues.count})`"
+              :aria-label="`Saved (${savedEvents.count})`"
+              :aria-pressed="isCurrentRoute('/saved')"
+              :class="{ '!bg-[#ffe066]': isCurrentRoute('/saved') }"
             >
               <VueFeather
                 type="star"
                 class="h-4 w-4"
-                :fill="starredVenues.count ? 'currentColor' : 'none'"
+                :fill="savedEvents.count ? 'currentColor' : 'none'"
                 aria-hidden="true"
               />
               <!-- icon-only on small screens so the title doesn't wrap -->
               <span class="hidden sm:inline">Saved</span>
             </button>
           </RouterLink>
-          <RouterLink to="/about" v-show="!isCurrentRoute('/about')">
+          <RouterLink to="/about" v-if="!isCurrentRoute('/about')">
             <button
               class="rounded-full border-2 border-black bg-white px-3 py-1 font-sans text-xs font-semibold uppercase tracking-[0.2em] text-[#1f1b2c] shadow-[4px_4px_0_#1f1b2c] transition-transform hover:-translate-y-0.5 hover:bg-[#ff8ba7] hover:shadow-[6px_6px_0_#f15a24] sm:px-4 sm:py-2 sm:text-sm sm:tracking-widest"
             >
@@ -389,9 +392,9 @@ const currentYear = new Date().getFullYear();
 
       <h3
         class="flex flex-wrap items-center justify-start gap-x-2 gap-y-1 leading-10 font-serif text-xs text-[#1f1b2c] sm:flex-nowrap sm:text-xl md:text-2xl"
-        v-show="isCurrentRoute('/')"
+        v-show="isCurrentRoute('/') || isCurrentRoute('/saved')"
       >
-        <span class="hidden lg:inline">Explore</span>
+        <span class="hidden lg:inline">{{ isCurrentRoute('/saved') ? 'Saved' : 'Explore' }}</span>
         <DropdownSelector
           class="text-xs sm:text-lg md:text-xl mr-1 sm:mr-2"
           :options="categoryOptions"
